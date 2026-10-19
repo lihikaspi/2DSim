@@ -1,9 +1,11 @@
-import numpy as np
 import copy
+
+import numpy as np
 from PIL import Image
 
-LIVE = '1'
-DEAD = '0'
+LIVE = "1"
+DEAD = "0"
+
 
 class GOLSimulation:
     def __init__(self, seed, steps):
@@ -35,11 +37,11 @@ class GOLSimulation:
         live_count_grid = np.zeros((self.num_rows, self.num_cols), dtype=int)
         for r in range(self.num_rows):
             for c in range(self.num_cols):
-                for i in range(r-1, r+2):
-                    for j in range(c-1, c+2):
+                for i in range(r - 1, r + 2):
+                    for j in range(c - 1, c + 2):
                         if r == i and c == j:
                             continue
-                        if self.check_in_grid(i,j):
+                        if self.check_in_grid(i, j):
                             if self.curr_state[r][c] == LIVE:
                                 live_count_grid[i][j] += 1
         self.live_count_grid = live_count_grid
@@ -50,10 +52,7 @@ class GOLSimulation:
         for r in range(self.num_rows):
             for c in range(self.num_cols):
                 if self.curr_state[r][c] == LIVE:
-                    if self.live_count_grid[r][c] < 2:
-                        next_state[r][c] = DEAD
-                    # a live cell with 2 or 3 doesn't change state
-                    elif self.live_count_grid[r][c] > 3:
+                    if self.live_count_grid[r][c] < 2 or self.live_count_grid[r][c] > 3:
                         next_state[r][c] = DEAD
                 elif self.curr_state[r][c] == DEAD:
                     if self.live_count_grid[r][c] == 3:
@@ -72,11 +71,10 @@ class GOLSimulation:
 
             pixel_array = ((1 - grid) * 255).astype(np.uint8)
 
-            img = Image.fromarray(pixel_array, mode='L')
+            img = Image.fromarray(pixel_array, mode="L")
             img_resized = img.resize(
-                (cols * pixel_size, rows * pixel_size),
-                resample=Image.NEAREST
-            ).convert('RGB')
+                (cols * pixel_size, rows * pixel_size), resample=Image.NEAREST
+            ).convert("RGB")
 
             img_arr = np.array(img_resized)
             img_arr[:, ::pixel_size] = [grid_color, grid_color, grid_color]
@@ -85,11 +83,11 @@ class GOLSimulation:
             images.append(Image.fromarray(img_arr))
 
         images[0].save(
-            f'animation_{self.seed}_{self.total_steps}.gif',
+            f"animation_{self.seed}_{self.total_steps}.gif",
             save_all=True,
             append_images=images[1:],
             duration=250,  # 250 ms per frame (4 fps)
-            loop=0  # Loop forever
+            loop=0,  # Loop forever
         )
 
     def run_simulation(self):
@@ -99,6 +97,7 @@ class GOLSimulation:
         self.visualize_sim()
         print("*********** END GAME! ***********")
 
+
 def main():
     print("*********** START GAME! ***********")
     print("choose seed:")
@@ -107,6 +106,7 @@ def main():
     steps = int(input())
     sim = GOLSimulation(seed, steps)
     sim.run_simulation()
+
 
 if __name__ == "__main__":
     main()

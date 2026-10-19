@@ -1,2 +1,3 @@
 *.gif
-.venv
+.venv/
+.idea/
