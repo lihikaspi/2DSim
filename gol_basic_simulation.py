@@ -5,6 +5,8 @@ from PIL import Image
 
 LIVE = "1"
 DEAD = "0"
+PRINT_LIVE = "*"
+PRINT_DEAD = "."
 
 
 class GOLSimulation:
@@ -16,6 +18,7 @@ class GOLSimulation:
         self.live_count_grid = []
         self.total_steps = steps
         self.curr_step = 0
+        self.pretty_print(initial=True)
 
     def load_seed(self, seed):
         seed = seed.strip()
@@ -90,10 +93,24 @@ class GOLSimulation:
             loop=0,  # Loop forever
         )
 
+    def pretty_print(self, initial=False):
+        print("\nINITIAL SEED:" if initial else f"\nSTEP {self.curr_step}:")
+        board = self.initial_grid if initial else self.curr_state
+        to_print = []
+        for r in range(self.num_rows):
+            line = " ".join(board[r])
+            line = line.replace(LIVE, PRINT_LIVE)
+            line = line.replace(DEAD, PRINT_DEAD)
+            to_print.append(line)
+        for p in to_print:
+            print(p)
+
+
     def run_simulation(self):
         while self.curr_step < self.total_steps:
             self.update_count_grid()
             self.step()
+            self.pretty_print()
         self.visualize_sim()
         print("*********** END GAME! ***********")
 
