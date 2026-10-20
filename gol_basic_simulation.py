@@ -1,5 +1,6 @@
 import copy
 from pathlib import Path
+
 import numpy as np
 from PIL import Image
 
@@ -10,7 +11,15 @@ PRINT_DEAD = "."
 
 
 class GOLSimulation:
-    def __init__(self, seed, steps):
+    """
+    Game Of Life Simulation Class
+    """
+    def __init__(self, seed: str, steps: int) -> None:
+        """
+        Initializes the simulation
+        :param seed: initial seed template name
+        :param steps: total number of steps for the game
+        """
         self.seed = seed
         self.initial_grid, self.num_rows, self.num_cols = self.load_seed(seed)
         self.states = [self.initial_grid]
@@ -20,7 +29,12 @@ class GOLSimulation:
         self.curr_step = 0
         self.pretty_print(initial=True)
 
-    def load_seed(self, seed):
+    def load_seed(self, seed: str) -> (list, int ,int):
+        """
+        Loads the initial greed from the predefined files in `seed_templates/`
+        :param seed: seed template name
+        :return: tuple of initial grid array and rows cnd columns lengths
+        """
         seed = seed.strip()
         seed_path = Path(f"seed_templates/{seed}.txt")
         if not seed_path.is_file():
@@ -31,12 +45,21 @@ class GOLSimulation:
             num_cols = len(initial_grid[0])
         return initial_grid, num_rows, num_cols
 
-    def check_in_grid(self, r, c):
+    def check_in_grid(self, r: int, c: int) -> bool:
+        """
+        Checks if a cell is inside the grid's boundaries
+        :param r: current row
+        :param c: current column
+        :return: if the cell is inside the grid's boundaries
+        """
         if r < 0 or r >= self.num_rows or c < 0 or c >= self.num_cols:
             return False
         return True
 
-    def update_count_grid(self):
+    def update_count_grid(self) -> None:
+        """
+        Updates the live neighbors counter grid according to the current state
+        """
         live_count_grid = np.zeros((self.num_rows, self.num_cols), dtype=int)
         for r in range(self.num_rows):
             for c in range(self.num_cols):
@@ -49,7 +72,10 @@ class GOLSimulation:
                                 live_count_grid[i][j] += 1
         self.live_count_grid = live_count_grid
 
-    def step(self):
+    def step(self) -> None:
+        """
+        Performs one step of the game and adds it to the list of all states
+        """
         self.curr_step += 1
         next_state = copy.deepcopy(self.curr_state)
         for r in range(self.num_rows):
@@ -63,7 +89,11 @@ class GOLSimulation:
         self.states.append(next_state)
         self.curr_state = self.states[-1]
 
-    def visualize_sim(self):
+    def visualize_sim(self) -> None:
+        """
+        Visualizes the simulation steps and saves it into a `.gif` file in the `basic_animations` directory
+        :return: GIF file of the simulation steps
+        """
         images = []
         pixel_size = 15  # Size of each cell in pixels
         grid_color = 200  # Gray level for gridlines (0-255)
@@ -86,14 +116,18 @@ class GOLSimulation:
             images.append(Image.fromarray(img_arr))
 
         images[0].save(
-            f"animation_{self.seed}_{self.total_steps}.gif",
+            f"basic_animations/animation_{self.seed}_{self.total_steps}.gif",
             save_all=True,
             append_images=images[1:],
             duration=250,  # 250 ms per frame (4 fps)
             loop=0,  # Loop forever
         )
 
-    def pretty_print(self, initial=False):
+    def pretty_print(self, initial=False) -> None:
+        """
+        Pretty-prints the simulation steps
+        :param initial: whether to print the initial state (True) or the current state (False)
+        """
         print("\nINITIAL SEED:" if initial else f"\nSTEP {self.curr_step}:")
         board = self.initial_grid if initial else self.curr_state
         to_print = []
@@ -106,7 +140,10 @@ class GOLSimulation:
             print(p)
 
 
-    def run_simulation(self):
+    def run_simulation(self) -> None:
+        """
+        Runs each step of the simulation until reaching the total number of steps
+        """
         while self.curr_step < self.total_steps:
             self.update_count_grid()
             self.step()
