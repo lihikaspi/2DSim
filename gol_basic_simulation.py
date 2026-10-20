@@ -1,5 +1,5 @@
 import copy
-
+from pathlib import Path
 import numpy as np
 from PIL import Image
 
@@ -19,9 +19,9 @@ class GOLSimulation:
 
     def load_seed(self, seed):
         seed = seed.strip()
-        if seed not in ["canoe", "cloverleaf", "hammerhead"]:
-            raise ValueError("Seed must be 'canoe' or 'cloverleaf' or 'hammerhead'")
-        seed_path = f"seed_templates/{seed}.txt"
+        seed_path = Path(f"seed_templates/{seed}.txt")
+        if not seed_path.is_file():
+            raise ValueError("Seed is not valid")
         with open(seed_path, "r") as file:
             initial_grid = [list(line.strip()) for line in file if line.strip()]
             num_rows = len(initial_grid)
