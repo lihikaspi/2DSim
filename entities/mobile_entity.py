@@ -36,7 +36,7 @@ class MobileEntity(Entity):
 
             for dr, dc in moves:
                 nr, nc = curr_row + dr, curr_col + dc
-                if (grid.is_valid_move(nr, nc, visited=visited, entity_type=self.get_type())
+                if (grid.is_valid_move(nr, nc, visited=visited)
                         and grid.is_in_radius(loc, nr, nc, self._radius)):
                     visited[nr][nc] = True
                     parent[(nr, nc)] = (curr_row, curr_col)
@@ -56,7 +56,7 @@ class MobileEntity(Entity):
         return path
 
     def get_random_valid_move(self, grid) -> Tuple[int, int]:
-        valid_moves = grid.get_valid_moves(self.loc, entity_type=self.get_type())
+        valid_moves = grid.get_valid_moves(self.loc)
         if not valid_moves:
             print(f"INFO:{self.loc}: no valid moves, entity not moving!")
             return self.loc

@@ -1,10 +1,10 @@
 entities:
-  t_plant: 10
+  t_plant: 20
   t_herbivore: 15
   r_herbivore_sight: 3
-  t_cooldown: 20
-  t_predator: 20
-  r_predator_sight: 5
+  t_cooldown: 5
+  t_predator: 10
+  r_predator_sight: 3
   plant_spawn_threshold: 0.5
 sim:
   board_size:

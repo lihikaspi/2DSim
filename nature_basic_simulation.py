@@ -41,7 +41,7 @@ def main():
     print(f"board chosen: {cfg.boards[seed][0]}")
     sim = NatureGOLSimulation(cfg, cfg.boards[seed][1])
     sim.run_simulation()
-    print("********* START GAME *********")
+    print("********* END GAME *********")
 
 if __name__ == "__main__":
     main()

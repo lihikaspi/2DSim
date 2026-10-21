@@ -11,6 +11,12 @@ class Herbivore(MobileEntity):
         self._t_cooldown = t_cooldown
         self._steps_since_repro = None
 
+    def get_steps_since_repro(self) -> int:
+        return self._steps_since_repro
+
+    def get_cooldown(self) -> int:
+        return self._t_cooldown
+
     def move(self, grid):
         if not self.is_still_alive():
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
@@ -21,15 +27,17 @@ class Herbivore(MobileEntity):
             self._steps_since_repro += 1
 
         next_move = self.get_next_move(grid, predator=False)
+        next_move_entity = grid.grid[next_move]
 
-        if grid.grid[next_move].get_type() == EntityType.HERBIVORE and next_move != self.loc:
-            if self.can_reproduce():
+        if next_move_entity.get_type() == EntityType.HERBIVORE and next_move != self.loc:
+            if (Herbivore.can_reproduce(self._steps_since_repro, self._t_cooldown)
+                    and Herbivore.can_reproduce(next_move_entity.get_steps_since_repro(), next_move_entity.get_cooldown())):
                 self.reproduction(grid, next_move)
                 self._steps_since_repro = 0
             self.curr_step += 1
             return
 
-        if grid.grid[next_move].get_type() == EntityType.PLANT:
+        if next_move_entity.get_type() == EntityType.PLANT:
             self.curr_step = 0
         else:
             self.curr_step += 1
@@ -39,8 +47,9 @@ class Herbivore(MobileEntity):
         self.loc = next_move
         grid.update_grid(next_move, self)
 
-    def can_reproduce(self) -> bool:
-        return self._steps_since_repro is None or self._steps_since_repro >= self._t_cooldown
+    @staticmethod
+    def can_reproduce(steps_since: int, cooldown: int) -> bool:
+        return steps_since is None or steps_since >= cooldown
 
     def reproduction(self, grid, partner_loc: Tuple[int, int]):
         neighbors = grid.get_empty_neighbors(partner_loc)
