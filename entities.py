@@ -1,13 +1,14 @@
 from abc import ABC
 from typing import Tuple
 import random
-from consts import EntityType, ENTITIES
+from grid import EntityType
 
 class Entity(ABC):
     """
     Abstract class for entities on the board
     """
-    def __init__(self, t: EntityType, lifespan: int, loc: Tuple[int, int]):
+    def __init__(self, t: EntityType, lifespan: int, loc: Tuple[int, int], cfg):
+        self.cfg = cfg
         self._type = t
         self.lifespan = lifespan
         self.curr_step = 0
@@ -20,19 +21,19 @@ class Entity(ABC):
         return self.curr_step < self.lifespan
 
 class EmptySpace(Entity):
-    def __init__(self, loc: Tuple[int, int]):
-        super().__init__(EntityType.EMPTY, -1, loc)
+    def __init__(self, loc: Tuple[int, int], cfg):
+        super().__init__(EntityType.EMPTY, -1, loc, cfg)
 
 class Tree(Entity):
-    def __init__(self, loc: Tuple[int, int]):
-        super().__init__(EntityType.TREE, -1, loc)
+    def __init__(self, loc: Tuple[int, int], cfg):
+        super().__init__(EntityType.TREE, -1, loc, cfg)
 
 class Plant(Entity):
-    def __init__(self, lifespan: int, loc: Tuple[int, int]):
-        super().__init__(EntityType.PLANT, lifespan, loc)
+    def __init__(self, lifespan: int, loc: Tuple[int, int], cfg):
+        super().__init__(EntityType.PLANT, lifespan, loc, cfg)
 
     @staticmethod
-    def spawn():
-        return random.random() > ENTITIES.PLANT_SPAWN_THRESHOLD
+    def spawn(spawn_threshold):
+        return random.random() > spawn_threshold
 
 

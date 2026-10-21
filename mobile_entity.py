@@ -1,4 +1,4 @@
-from consts import EntityType
+from grid import EntityType
 from entities import Entity
 from grid import Grid
 from typing import Tuple, List
@@ -9,8 +9,8 @@ import random
 import numpy as np
 
 class MobileEntity(Entity):
-    def __init__(self, t: EntityType, lifespan: int, loc: Tuple[int, int], radius: int):
-        super().__init__(t, lifespan, loc)
+    def __init__(self, t: EntityType, lifespan: int, loc: Tuple[int, int], radius: int, cfg):
+        super().__init__(t, lifespan, loc, cfg)
         self._radius = radius
 
     def bfs(self, grid: Grid, target: EntityType, loc: Tuple[int, int]) -> List[Tuple[int, int]]:
@@ -41,7 +41,7 @@ class MobileEntity(Entity):
             moves = np.mgrid[-1:2, -1:2].transpose(1, 2, 0)
 
             for new_row, new_col in moves:
-                if grid.is_valid_move(new_row, new_col, visited=visited) and grid.is_in_radius(loc, new_row, new_col, self.radius):
+                if grid.is_valid_move(new_row, new_col, visited=visited) and grid.is_in_radius(loc, new_row, new_col, self._radius):
                     queue.append((new_row, new_col))
                     visited[new_row][new_col] = True
         print(f"INFO:{self.loc}: found path to {EntityType(target).name} -> {final_traversal_summary}")

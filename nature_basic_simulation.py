@@ -1,17 +1,16 @@
-from typing import List
+from grid import Grid, EntityType
+from omegaconf import OmegaConf
 
-from consts import EntityType
-from grid import Grid
-import yaml
 
 class NatureGOLSimulation:
-    def __init__(self, initial_grid: List[List[int]], total_steps: int) -> None:
+    def __init__(self, cfg, initial_grid) -> None:
+        self.cfg = cfg
         self.initial_grid = initial_grid
-        self.grid = Grid(initial_grid)
+        self.grid = Grid(cfg)
         self.states = []
         self.curr_step = 0
-        self.total_steps = total_steps
-        self.pretty_print(initial=True)
+        self.total_steps = cfg.sim.total_steps
+        # self.pretty_prinrint(initial=True)
 
     def step(self) -> None:
         self.curr_step += 1
@@ -19,7 +18,7 @@ class NatureGOLSimulation:
         self.grid.step_per_type(EntityType.HERBIVORE)
         self.grid.step_per_type(EntityType.PLANT)
         self.grid.spawn_plants()
-        self.pretty_print()
+        # self.pretty_print()
 
     def run_simulation(self) -> None:
         while self.curr_step < self.total_steps:
@@ -31,5 +30,15 @@ class NatureGOLSimulation:
         self.states.append(simple_grid)
         pass
 
+def main():
+    cfg = OmegaConf.load("config.yaml")
+    print(f"choose initial grid:")
+    seed = int(input().strip())
+    print(f"board chosen: {cfg.boards[seed][0]}")
+    sim = NatureGOLSimulation(cfg, cfg.boards[seed][1])
+    sim.run_simulation()
+
+if __name__ == "__main__":
+    main()
 
 

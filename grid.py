@@ -1,40 +1,49 @@
 import random
-
+from enum import Enum
 import numpy as np
 from typing import Tuple, List
-from consts import EntityType, ENTITIES
 from entities import Entity, EmptySpace, Tree, Plant
 from predator import Predator
 from herbivore import Herbivore
-from mobile_entity import MobileEntity
+
+class EntityType(Enum):
+    """
+    Entity type definitions to be used throughout the code
+    """
+    EMPTY = 0
+    TREE = 1
+    PLANT = 2
+    HERBIVORE = 3
+    PREDATOR = 4
 
 class Grid:
-    def __init__(self, initial_grid: List[List[int]]):
-        self.grid = self.set_initial_grid(initial_grid)
-        self.num_rows = len(initial_grid)
-        self.num_cols = len(initial_grid[0])
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.grid = self.set_initial_grid(cfg.sim.initial_grid)
+        self.num_rows = len(self.grid)
+        self.num_cols = len(self.grid[0])
 
     @staticmethod
-    def _get_new_entity(val: int, loc) -> Entity:
+    def _get_new_entity(val: int, loc: Tuple[int, int], cfg) -> Entity:
         if val == EntityType.EMPTY:
-            return EmptySpace(loc)
+            return EmptySpace(loc, cfg)
         elif val == EntityType.TREE:
-            return Tree(loc)
+            return Tree(loc, cfg)
         elif val == EntityType.PLANT:
-            return Plant(ENTITIES.T_PLANT, loc)
+            return Plant(cfg.entities.t_plant, loc, cfg)
         elif val == EntityType.HERBIVORE:
-            return Herbivore(ENTITIES.T_HERBIVORE, loc, ENTITIES.R_HERBIVORE_SIGHT, ENTITIES.T_COOLDOWN)
+            return Herbivore(cfg.entities.t_herbivore, loc, cfg.entities.r_herbivore_sight, cfg.entities.t_cooldown, cfg)
         elif val == EntityType.PREDATOR:
-            return Predator(ENTITIES.T_PREDATOR, loc, ENTITIES.R_PREDATOR_SIGHT)
+            return Predator(cfg.entities.t_predator, loc, cfg.entities.r_predator_sight, cfg)
         else:
             #TODO: print error message without traceback
             raise ValueError(f"Unknown entity type: {val}")
 
     def set_initial_grid(self, initial_grid: List[List[int]]):
         grid = np.ndarray(shape=(len(initial_grid[0]), len(initial_grid[1])))
-        for row in initial_grid:
-            for col in row:
-                grid[row, col] = self._get_new_entity(int(row[col]), (row, col))
+        for row in range(self.num_rows):
+            for col in range(self.num_cols):
+                grid[row, col] = self._get_new_entity(initial_grid[row][col], (row, col), self.cfg)
         return grid
 
     def is_in_grid(self, x: int, y: int):
@@ -84,7 +93,7 @@ class Grid:
         ents = self.get_all_type_cells(t, only_loc=False)
         for e in ents:
             if t == EntityType.PLANT and not e.is_still_alive():
-                self.update_grid(e.loc, EmptySpace(e.loc))
+                self.update_grid(e.loc, EmptySpace(e.loc, self.cfg))
             elif t == EntityType.HERBIVORE or t == EntityType.PREDATOR:
                 e.move(self)
             else:
@@ -94,8 +103,8 @@ class Grid:
         empty_cells = self.get_all_type_cells(EntityType.EMPTY)
         for _ in range(random.randint(0, len(empty_cells))):
             loc = random.choice(empty_cells)
-            if Plant.spawn():
-                self.update_grid(loc, Plant(ENTITIES.T_PLANT, loc))
+            if Plant.spawn(self.cfg.entitie.plant_spawn_threshold):
+                self.update_grid(loc, Plant(self.cfg.entities.t_plant, loc, self.cfg))
 
     def simplify(self):
         simple_grid = []
