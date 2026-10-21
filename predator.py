@@ -1,0 +1,23 @@
+from consts import EntityType
+from entities import EmptySpace
+from mobile_entity import MobileEntity
+from grid import Grid
+from typing import Tuple
+
+class Predator(MobileEntity):
+    def __init__(self, lifespan: int, loc: Tuple[int, int], r: int):
+        super().__init__(EntityType.PREDATOR, lifespan, loc, r)
+
+    def move(self, grid: Grid) -> None:
+        if not self.is_still_alive():
+            grid.update_grid(self.loc, EmptySpace(self.loc))
+            print(f"INFO:{self.loc}: predator reached lifespan")
+            return
+
+        next_move = self.get_next_move(grid)
+        self.curr_step = 0 if grid.grid[next_move].get_type() == EntityType.HERBIVORE else self.curr_step + 1
+
+        print(f"INFO:{self.loc} -> {next_move}: herbivore moved")
+        grid.update_grid(self.loc, EmptySpace(self.loc))
+        self.loc = next_move
+        grid.update_grid(next_move, self)
