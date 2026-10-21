@@ -11,8 +11,8 @@ class ENTITIES:
     PLANT_SPAWN_THRESHOLD = 0.5
 
 class SIM:
-    BOARD_SIZE = (30,30)
-    TOTAL_STEPS = 200
+    BOARD_SIZE = (5,5)
+    TOTAL_STEPS = 5
 
 class PRETTY_PRINT:
     EMPTY = '.'

@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Tuple
 import random
-from grid import EntityType
+from entities.entity_type_enum import EntityType
 
 class Entity(ABC):
     """

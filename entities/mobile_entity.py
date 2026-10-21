@@ -1,10 +1,8 @@
-from grid import EntityType
-from entities import Entity
-from grid import Grid
+from entities.entity_type_enum import EntityType
+from entities.entity import Entity
 from typing import Tuple, List
 from collections import deque
 from abc import abstractmethod
-from predator import Predator
 import random
 import numpy as np
 
@@ -13,7 +11,7 @@ class MobileEntity(Entity):
         super().__init__(t, lifespan, loc, cfg)
         self._radius = radius
 
-    def bfs(self, grid: Grid, target: EntityType, loc: Tuple[int, int]) -> List[Tuple[int, int]]:
+    def bfs(self, grid, target: EntityType, loc: Tuple[int, int]) -> List[Tuple[int, int]]:
         """
         Breadth-first search on the game grid looking for a cell with the wanted entity type
         Args:
@@ -38,16 +36,18 @@ class MobileEntity(Entity):
             if curr_cell.get_type() == target:
                 return final_traversal_summary
 
-            moves = np.mgrid[-1:2, -1:2].transpose(1, 2, 0)
+            moves = [tuple(c) for c in np.mgrid[-1:2, -1:2].reshape(2, -1).T]
 
-            for new_row, new_col in moves:
+            for dr, dc in moves:
+                new_row = row + dr
+                new_col = col + dc
                 if grid.is_valid_move(new_row, new_col, visited=visited) and grid.is_in_radius(loc, new_row, new_col, self._radius):
                     queue.append((new_row, new_col))
                     visited[new_row][new_col] = True
         print(f"INFO:{self.loc}: found path to {EntityType(target).name} -> {final_traversal_summary}")
         return final_traversal_summary
 
-    def get_random_valid_move(self, grid: Grid) -> Tuple[int, int]:
+    def get_random_valid_move(self, grid) -> Tuple[int, int]:
         valid_moves = grid.get_valid_moves(self.loc)
         if len(valid_moves) == 0:
             print(f"INFO:{self.loc}: no valid moves, entity not moving!")
@@ -55,15 +55,15 @@ class MobileEntity(Entity):
         else:
             return random.choice(valid_moves)
 
-    def get_next_move(self, grid: Grid) -> Tuple[int, int]:
+    def get_next_move(self, grid, predator : bool = False) -> Tuple[int, int]:
         if self._radius <= 0:
             return self.get_random_valid_move(grid)
-        target = EntityType.HERBIVORE if isinstance(self, Predator) else EntityType.PLANT
+        target = EntityType.HERBIVORE if predator else EntityType.PLANT
         path = self.bfs(grid, target, self.loc)
         if len(path) == 0:
             return self.get_random_valid_move(grid)
         return path.pop()
 
     @abstractmethod
-    def move(self, grid: Grid):
+    def move(self, grid):
         pass

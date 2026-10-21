@@ -1,14 +1,13 @@
-from grid import EntityType
-from entities import EmptySpace
-from mobile_entity import MobileEntity
-from grid import Grid
+from entities.entity_type_enum import EntityType
+from entities.entity import EmptySpace
+from entities.mobile_entity import MobileEntity
 from typing import Tuple
 
 class Predator(MobileEntity):
     def __init__(self, lifespan: int, loc: Tuple[int, int], r: int, cfg):
         super().__init__(EntityType.PREDATOR, lifespan, loc, r, cfg)
 
-    def move(self, grid: Grid) -> None:
+    def move(self, grid) -> None:
         if not self.is_still_alive():
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
             print(f"INFO:{self.loc}: predator reached lifespan")

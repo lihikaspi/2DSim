@@ -1,6 +1,6 @@
-from entities import EmptySpace
-from mobile_entity import MobileEntity
-from grid import Grid, EntityType
+from entities.entity import EmptySpace
+from entities.mobile_entity import MobileEntity
+from entities.entity_type_enum import EntityType
 from typing import Tuple
 import random
 
@@ -10,7 +10,7 @@ class Herbivore(MobileEntity):
         self._t_cooldown = t_cooldown
         self._steps_since_repro = None
 
-    def move(self, grid: Grid):
+    def move(self, grid):
         if not self.is_still_alive():
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
             print(f"INFO:{self.loc}: herbivore reached lifespan")
@@ -32,8 +32,12 @@ class Herbivore(MobileEntity):
     def can_reproduce(self):
         return self._steps_since_repro is None or self._steps_since_repro > self._t_cooldown
 
-    def reproduction(self, grid: Grid, next_move: Tuple[int, int]):
-        repro_loc = random.choice(grid.get_empty_neighbors(next_move))
+    def reproduction(self, grid, next_move: Tuple[int, int]):
+        neighbors = grid.get_empty_neighbors(next_move)
+        if len(neighbors) == 0:
+            print(f"INFO:{self.loc}: no empty neighboring cell, can't reproduce")
+            return
+        repro_loc = random.choice(neighbors)
         grid.update_grid(repro_loc, Herbivore(self.lifespan, repro_loc, self._radius, self._t_cooldown, self.cfg))
         print(f"INFO:{self.loc}: herbivore reproduced")
         print(f"INFO:{repro_loc}: new herbivore spawned after reproduction")
