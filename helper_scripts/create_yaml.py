@@ -1,6 +1,7 @@
 from omegaconf import OmegaConf
 from pathlib import Path
 
+
 class ENTITIES:
     T_PLANT = 10
     T_HERBIVORE = 15
@@ -42,7 +43,7 @@ def load_indexed_boards(boards_dir_path: str):
 
     if boards_dir.exists():
         for idx, file_path in enumerate(sorted(boards_dir.glob("*.txt"))):
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 grid = [
                     [int(token) for token in line.split()]
                     for line in f

@@ -1,8 +1,9 @@
-from entities.entity import EmptySpace
-from entities.mobile_entity import MobileEntity
-from entities.entity_type_enum import EntityType
-from typing import Tuple
 import random
+from entities.entity import EmptySpace
+from entities.entity_type_enum import EntityType
+from entities.mobile_entity import MobileEntity
+from typing import Tuple
+
 
 class Herbivore(MobileEntity):
     def __init__(self, lifespan: int, loc: Tuple[int, int], r: int, t_cooldown: int, cfg):

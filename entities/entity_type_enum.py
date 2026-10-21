@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class EntityType(Enum):
     """
     Entity type definitions to be used throughout the code

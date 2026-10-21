@@ -1,10 +1,11 @@
-import random
 import numpy as np
-from typing import Tuple, List
-from entities.entity import Entity, EmptySpace, Tree, Plant
-from entities.predator import Predator
-from entities.herbivore import Herbivore
+import random
+from entities.entity import EmptySpace, Entity, Plant, Tree
 from entities.entity_type_enum import EntityType
+from entities.herbivore import Herbivore
+from entities.predator import Predator
+from typing import List, Tuple
+
 
 class Grid:
     def __init__(self, initial_grid, cfg):
@@ -90,6 +91,8 @@ class Grid:
                 raise ValueError(f"Entity type {t} is not moveable")
 
     def spawn_plants(self):
+        if len(self.get_all_type_cells(EntityType.PLANT)) == 0:
+            return
         empty_cells = self.get_all_type_cells(EntityType.EMPTY)
         for _ in range(random.randint(0, len(empty_cells))):
             loc = random.choice(empty_cells)

@@ -1,6 +1,6 @@
+from entities.entity_type_enum import EntityType
 from grid import Grid
 from omegaconf import OmegaConf
-from entities.entity_type_enum import EntityType
 
 
 class NatureGOLSimulation:
@@ -28,15 +28,15 @@ class NatureGOLSimulation:
     def pretty_print(self, initial: bool = False):
         simple_grid = self.grid.simplify()
         self.states.append(simple_grid)
-        if initial:
-            print(f"board at initial state")
-        else:
-            print(f"board at step {self.curr_step}")
+        header = "board at initial state" if initial else f"board at step {self.curr_step}"
+        print(header)
+        for row in simple_grid:
+            print(" ".join(row))
 
 def main():
     print("********* START GAME *********")
     cfg = OmegaConf.load("config.yaml")
-    print(f"choose initial grid:")
+    print("choose initial grid:")
     seed = int(input().strip())
     print(f"board chosen: {cfg.boards[seed][0]}")
     sim = NatureGOLSimulation(cfg, cfg.boards[seed][1])

@@ -1,7 +1,8 @@
-from abc import ABC
-from typing import Tuple
 import random
+from abc import ABC
 from entities.entity_type_enum import EntityType
+from typing import Tuple
+
 
 class Entity(ABC):
     """

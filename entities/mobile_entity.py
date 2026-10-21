@@ -1,10 +1,11 @@
-from entities.entity_type_enum import EntityType
-from entities.entity import Entity
-from typing import Tuple, List
-from collections import deque
-from abc import abstractmethod
-import random
 import numpy as np
+import random
+from abc import abstractmethod
+from collections import deque
+from entities.entity import Entity
+from entities.entity_type_enum import EntityType
+from typing import List, Tuple
+
 
 class MobileEntity(Entity):
     def __init__(self, t: EntityType, lifespan: int, loc: Tuple[int, int], radius: int, cfg):

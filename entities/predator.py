@@ -1,7 +1,8 @@
-from entities.entity_type_enum import EntityType
 from entities.entity import EmptySpace
+from entities.entity_type_enum import EntityType
 from entities.mobile_entity import MobileEntity
 from typing import Tuple
+
 
 class Predator(MobileEntity):
     def __init__(self, lifespan: int, loc: Tuple[int, int], r: int, cfg):

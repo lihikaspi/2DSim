@@ -1,7 +1,6 @@
 import copy
-from pathlib import Path
-
 import numpy as np
+from pathlib import Path
 from PIL import Image
 
 LIVE = "1"
@@ -39,7 +38,7 @@ class GOLSimulation:
         seed_path = Path(f"seed_templates/{seed}.txt")
         if not seed_path.is_file():
             raise ValueError("Seed is not valid")
-        with open(seed_path, "r") as file:
+        with open(seed_path) as file:
             initial_grid = [list(line.strip()) for line in file if line.strip()]
             num_rows = len(initial_grid)
             num_cols = len(initial_grid[0])

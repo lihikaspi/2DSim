@@ -10,7 +10,7 @@ sim:
   board_size:
   - 5
   - 5
-  total_steps: 5
+  total_steps: 40
 pretty_print:
   empty: .
   tree: ^
