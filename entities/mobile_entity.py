@@ -37,6 +37,7 @@ class MobileEntity(Entity):
             for dr, dc in moves:
                 nr, nc = curr_row + dr, curr_col + dc
                 if (grid.is_valid_move(nr, nc, visited=visited)
+                        and grid.check_herbivores_repro(self, grid.grid[nr, nc])
                         and grid.is_in_radius(loc, nr, nc, self._radius)):
                     visited[nr][nc] = True
                     parent[(nr, nc)] = (curr_row, curr_col)

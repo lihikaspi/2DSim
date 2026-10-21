@@ -64,9 +64,14 @@ class Grid:
         r_start, r_end, c_start, c_end = self.get_radius_coords(loc, radius)
         return r_start <= row < r_end and c_start <= col < c_end
 
+    def check_herbivores_repro(self, ent1: Entity, ent2: Entity) -> bool:
+        if ent1.get_type() == EntityType.HERBIVORE and ent2.get_type() == EntityType.HERBIVORE:
+            return Herbivore.check_reproduction_possibility(ent1, ent2)
+        return True
+
     def get_valid_moves(self, loc: Tuple[int, int]) -> List[Tuple[int, int]]:
         neighbors = self.get_truncated_grid(loc, 1).flatten()
-        moves = [n.loc for n in neighbors if n.loc != loc and self.is_valid_move(n.loc[0], n.loc[1])]
+        moves = [n.loc for n in neighbors if n.loc != loc and self.is_valid_move(n.loc[0], n.loc[1]) and self.check_herbivores_repro(self.grid[loc], n)]
         return moves
 
     def get_empty_neighbors(self, loc: Tuple[int, int]) -> List[Tuple[int, int]]:

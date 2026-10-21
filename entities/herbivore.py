@@ -14,6 +14,9 @@ class Herbivore(MobileEntity):
     def get_steps_since_repro(self) -> int:
         return self._steps_since_repro
 
+    def reset_steps_since_repro(self) -> None:
+        self._steps_since_repro = 0
+
     def get_cooldown(self) -> int:
         return self._t_cooldown
 
@@ -30,10 +33,10 @@ class Herbivore(MobileEntity):
         next_move_entity = grid.grid[next_move]
 
         if next_move_entity.get_type() == EntityType.HERBIVORE and next_move != self.loc:
-            if (Herbivore.can_reproduce(self._steps_since_repro, self._t_cooldown)
-                    and Herbivore.can_reproduce(next_move_entity.get_steps_since_repro(), next_move_entity.get_cooldown())):
+            if Herbivore.check_reproduction_possibility(self, next_move_entity):
                 self.reproduction(grid, next_move)
                 self._steps_since_repro = 0
+                next_move_entity.reset_steps_since_repro()
             self.curr_step += 1
             return
 
@@ -50,6 +53,11 @@ class Herbivore(MobileEntity):
     @staticmethod
     def can_reproduce(steps_since: int, cooldown: int) -> bool:
         return steps_since is None or steps_since >= cooldown
+
+    @staticmethod
+    def check_reproduction_possibility(herb1:Herbivore, herb2:Herbivore) -> bool:
+        return (Herbivore.can_reproduce(herb1.get_steps_since_repro(), herb1.get_cooldown())
+                and Herbivore.can_reproduce(herb2.get_steps_since_repro(), herb2.get_cooldown()))
 
     def reproduction(self, grid, partner_loc: Tuple[int, int]):
         neighbors = grid.get_empty_neighbors(partner_loc)
