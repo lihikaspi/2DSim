@@ -1,4 +1,3 @@
-import numpy as np
 import random
 from abc import abstractmethod
 from collections import deque
@@ -13,57 +12,64 @@ class MobileEntity(Entity):
         self._radius = radius
 
     def bfs(self, grid, target: EntityType, loc: Tuple[int, int]) -> List[Tuple[int, int]]:
-        """
-        Breadth-first search on the game grid looking for a cell with the wanted entity type
-        Args:
-            grid (Grid): truncated grid containing only valid cells inside the entity's radius
-            target (EntityType): the goal entity type to find
-            loc (Tuple[int, int]): current entity's location
-
-        Returns:
-            List[Tuple[int, int]]: path from the current entity to the desired entity type's location
-        """
+        """Breadth-first search finding the shortest path to the closest target within sight radius."""
         rows, cols = grid.grid.shape
         queue = deque([loc])
         visited = [[False] * cols for _ in range(rows)]
-        final_traversal_summary = []
+        visited[loc[0]][loc[1]] = True
+        parent = {loc: None}
+
+        target_cell = None
 
         while queue:
-            row, col = queue.popleft()
-            visited[row][col] = True
-            curr_cell = grid.grid[row,col]
-            final_traversal_summary.append(curr_cell.loc)
+            curr_row, curr_col = queue.popleft()
 
-            if curr_cell.get_type() == target:
-                return final_traversal_summary
+            if grid.grid[curr_row, curr_col].get_type() == target and (curr_row, curr_col) != loc:
+                target_cell = (curr_row, curr_col)
+                break
 
-            moves = [tuple(c) for c in np.mgrid[-1:2, -1:2].reshape(2, -1).T]
+            moves = [
+                (-1, -1), (-1, 0), (-1, 1),
+                (0, -1),           (0, 1),
+                (1, -1),  (1, 0),  (1, 1)
+            ]
 
             for dr, dc in moves:
-                new_row = row + dr
-                new_col = col + dc
-                if grid.is_valid_move(new_row, new_col, visited=visited) and grid.is_in_radius(loc, new_row, new_col, self._radius):
-                    queue.append((new_row, new_col))
-                    visited[new_row][new_col] = True
-        print(f"INFO:{self.loc}: found path to {EntityType(target).name} -> {final_traversal_summary}")
-        return final_traversal_summary
+                nr, nc = curr_row + dr, curr_col + dc
+                if (grid.is_valid_move(nr, nc, visited=visited, entity_type=self.get_type())
+                        and grid.is_in_radius(loc, nr, nc, self._radius)):
+                    visited[nr][nc] = True
+                    parent[(nr, nc)] = (curr_row, curr_col)
+                    queue.append((nr, nc))
+
+        if target_cell is None:
+            return []
+
+        path = []
+        curr = target_cell
+        while curr is not None:
+            path.append(curr)
+            curr = parent[curr]
+        path.reverse()
+
+        print(f"INFO:{self.loc}: found path to {target.name} -> {path}")
+        return path
 
     def get_random_valid_move(self, grid) -> Tuple[int, int]:
-        valid_moves = grid.get_valid_moves(self.loc)
-        if len(valid_moves) == 0:
+        valid_moves = grid.get_valid_moves(self.loc, entity_type=self.get_type())
+        if not valid_moves:
             print(f"INFO:{self.loc}: no valid moves, entity not moving!")
             return self.loc
-        else:
-            return random.choice(valid_moves)
+        return random.choice(valid_moves)
 
-    def get_next_move(self, grid, predator : bool = False) -> Tuple[int, int]:
+    def get_next_move(self, grid, predator: bool = False) -> Tuple[int, int]:
         if self._radius <= 0:
             return self.get_random_valid_move(grid)
         target = EntityType.HERBIVORE if predator else EntityType.PLANT
         path = self.bfs(grid, target, self.loc)
-        if len(path) == 0:
+        if len(path) <= 1:
             return self.get_random_valid_move(grid)
-        return path.pop()
+        return path[1]
 
     @abstractmethod
     def move(self, grid):

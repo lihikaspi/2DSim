@@ -31,7 +31,7 @@ class Grid:
             raise ValueError(f"Unknown entity type: {val}")
 
     def set_initial_grid(self, initial_grid: List[List[int]]):
-        grid = np.ndarray(shape=(len(initial_grid[0]), len(initial_grid[1])), dtype=Entity)
+        grid = np.ndarray(shape=(self.num_rows, self.num_cols), dtype=Entity)
         for row in range(self.num_rows):
             for col in range(self.num_cols):
                 grid[row, col] = self._get_new_entity(initial_grid[row][col], (row, col), self.cfg)
@@ -41,8 +41,6 @@ class Grid:
         return not (x >= self.num_rows or x < 0 or y >= self.num_cols or y < 0)
 
     def update_grid(self, loc: Tuple[int, int], new_ent: Entity):
-        if self.grid[loc] is not None and self.grid[loc].get_type() == EntityType.HERBIVORE:
-            self.grid[loc] = [self.grid[loc], new_ent]
         self.grid[loc] = new_ent
 
     def get_radius_coords(self, loc: Tuple[int, int], radius: int) -> Tuple[int, int, int, int]:
@@ -59,7 +57,8 @@ class Grid:
     def is_valid_move(self, row: int, col: int, visited=None) -> bool:
         return (self.is_in_grid(row, col)
                 and (not visited[row][col] if visited is not None else True)
-                and self.grid[row,col] not in [EntityType.TREE, EntityType.PREDATOR])
+                and self.grid[row, col].get_type() is not EntityType.TREE
+                and self.grid[row, col].get_type() is not EntityType.PREDATOR)
 
     def is_in_radius(self, loc: Tuple[int, int], row: int, col: int, radius: int) -> bool:
         r_start, r_end, c_start, c_end = self.get_radius_coords(loc, radius)
@@ -67,7 +66,7 @@ class Grid:
 
     def get_valid_moves(self, loc: Tuple[int, int]) -> List[Tuple[int, int]]:
         neighbors = self.get_truncated_grid(loc, 1).flatten()
-        moves = [n.loc for n in neighbors if self.is_valid_move(n.loc[0], n.loc[1])]
+        moves = [n.loc for n in neighbors if n.loc != loc and self.is_valid_move(n.loc[0], n.loc[1])]
         return moves
 
     def get_empty_neighbors(self, loc: Tuple[int, int]) -> List[Tuple[int, int]]:
@@ -82,10 +81,16 @@ class Grid:
 
     def step_per_type(self, t: EntityType) -> None:
         ents = self.get_all_type_cells(t, only_loc=False)
+        moved = set()
         for e in ents:
-            if t == EntityType.PLANT and not e.is_still_alive():
-                self.update_grid(e.loc, EmptySpace(e.loc, self.cfg))
+            if id(e) in moved or self.grid[e.loc] is not e:
+                continue
+            if t == EntityType.PLANT:
+                e.increase_step()
+                if not e.is_still_alive():
+                    self.update_grid(e.loc, EmptySpace(e.loc, self.cfg))
             elif t == EntityType.HERBIVORE or t == EntityType.PREDATOR:
+                moved.add(id(e))
                 e.move(self)
             elif t == EntityType.EMPTY or t == EntityType.TREE:
                 raise ValueError(f"Entity type {t} is not moveable")
@@ -96,7 +101,7 @@ class Grid:
         empty_cells = self.get_all_type_cells(EntityType.EMPTY)
         for _ in range(random.randint(0, len(empty_cells))):
             loc = random.choice(empty_cells)
-            if Plant.spawn(self.cfg.entities.plant_spawn_threshold):
+            if self.grid[loc].get_type() == EntityType.EMPTY and Plant.spawn(self.cfg.entities.plant_spawn_threshold):
                 self.update_grid(loc, Plant(self.cfg.entities.t_plant, loc, self.cfg))
 
     def simplify(self):
@@ -104,4 +109,3 @@ class Grid:
         return [
             [mapping[self.grid[r, c].get_type().name.lower()] for c in range(self.num_cols)]
             for r in range(self.num_rows)]
-

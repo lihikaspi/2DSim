@@ -16,26 +16,35 @@ class Herbivore(MobileEntity):
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
             print(f"INFO:{self.loc}: herbivore reached lifespan")
             return
+
         if self._steps_since_repro is not None:
             self._steps_since_repro += 1
 
-        next_move = self.get_next_move(grid)
-        self.curr_step = 0 if grid.grid[next_move].get_type() == EntityType.PLANT else self.curr_step + 1
-        if grid.grid[next_move].get_type() == EntityType.HERBIVORE and self.can_reproduce():
-            self.reproduction(grid, next_move)
-            self._steps_since_repro = 1
+        next_move = self.get_next_move(grid, predator=False)
+
+        if grid.grid[next_move].get_type() == EntityType.HERBIVORE and next_move != self.loc:
+            if self.can_reproduce():
+                self.reproduction(grid, next_move)
+                self._steps_since_repro = 0
+            self.curr_step += 1
+            return
+
+        if grid.grid[next_move].get_type() == EntityType.PLANT:
+            self.curr_step = 0
+        else:
+            self.curr_step += 1
 
         print(f"INFO:{self.loc} -> {next_move}: herbivore moved")
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move
         grid.update_grid(next_move, self)
 
-    def can_reproduce(self):
-        return self._steps_since_repro is None or self._steps_since_repro > self._t_cooldown
+    def can_reproduce(self) -> bool:
+        return self._steps_since_repro is None or self._steps_since_repro >= self._t_cooldown
 
-    def reproduction(self, grid, next_move: Tuple[int, int]):
-        neighbors = grid.get_empty_neighbors(next_move)
-        if len(neighbors) == 0:
+    def reproduction(self, grid, partner_loc: Tuple[int, int]):
+        neighbors = grid.get_empty_neighbors(partner_loc)
+        if not neighbors:
             print(f"INFO:{self.loc}: no empty neighboring cell, can't reproduce")
             return
         repro_loc = random.choice(neighbors)

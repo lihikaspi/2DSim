@@ -5,9 +5,7 @@ from typing import Tuple
 
 
 class Entity(ABC):
-    """
-    Abstract class for entities on the board
-    """
+    """Abstract base class for all board entities."""
     def __init__(self, t: EntityType, lifespan: int, loc: Tuple[int, int], cfg):
         self.cfg = cfg
         self._type = t
@@ -18,7 +16,7 @@ class Entity(ABC):
     def get_type(self) -> EntityType:
         return self._type
 
-    def is_still_alive(self):
+    def is_still_alive(self) -> bool:
         return self.curr_step < self.lifespan
 
 class EmptySpace(Entity):
@@ -34,7 +32,8 @@ class Plant(Entity):
         super().__init__(EntityType.PLANT, lifespan, loc, cfg)
 
     @staticmethod
-    def spawn(spawn_threshold):
+    def spawn(spawn_threshold: float) -> bool:
         return random.random() > spawn_threshold
 
-
+    def increase_step(self):
+        self.curr_step += 1

@@ -14,10 +14,15 @@ class Predator(MobileEntity):
             print(f"INFO:{self.loc}: predator reached lifespan")
             return
 
-        next_move = self.get_next_move(grid)
-        self.curr_step = 0 if grid.grid[next_move].get_type() == EntityType.HERBIVORE else self.curr_step + 1
+        next_move = self.get_next_move(grid, predator=True)
+        target_entity = grid.grid[next_move]
 
-        print(f"INFO:{self.loc} -> {next_move}: herbivore moved")
+        if target_entity.get_type() == EntityType.HERBIVORE:
+            self.curr_step = 0
+        else:
+            self.curr_step += 1
+
+        print(f"INFO:{self.loc} -> {next_move}: predator moved")
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move
         grid.update_grid(next_move, self)
