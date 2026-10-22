@@ -1,5 +1,6 @@
-from omegaconf import OmegaConf
 from pathlib import Path
+
+from omegaconf import OmegaConf
 
 
 class ENTITIES:
@@ -50,7 +51,6 @@ def load_indexed_boards(boards_dir_path: str):
                     if line.strip()
                 ]
 
-            # Store tuple of (name, grid)
             boards[idx] = [file_path.stem, grid]
 
     return boards
