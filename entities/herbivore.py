@@ -1,6 +1,8 @@
 import random
 from typing import Tuple
 
+from omegaconf import DictConfig, ListConfig
+
 from entities.entity import EmptySpace
 from entities.entity_type_enum import EntityType
 from entities.mobile_entity import MobileEntity
@@ -12,7 +14,12 @@ class Herbivore(MobileEntity):
     """
 
     def __init__(
-        self, lifespan: int, loc: Tuple[int, int], r: int, t_cooldown: int, cfg
+        self,
+        lifespan: int,
+        loc: Tuple[int, int],
+        r: int,
+        t_cooldown: int,
+        cfg: DictConfig | ListConfig,
     ) -> None:
         """
         Initializes a Herbivore object
@@ -22,29 +29,17 @@ class Herbivore(MobileEntity):
             loc (Tuple[int, int]): Location of the entity
             r (int): sight radius for hunting
             t_cooldown (int): Cooldown time after reproduction
-            cfg: OmegaConf object
+            cfg (DictConfig | ListConfig): OmegaConf object
         """
         super().__init__(EntityType.HERBIVORE, lifespan, loc, r, cfg)
-        self._t_cooldown = t_cooldown
-        self._steps_since_repro = None
-
-    def get_steps_since_repro(self) -> int:
-        """
-        Returns the number of steps since reproduction
-        """
-        return self._steps_since_repro
+        self.t_cooldown = t_cooldown
+        self.steps_since_repro = None
 
     def reset_steps_since_repro(self) -> None:
         """
         Resets the number of steps since reproduction
         """
-        self._steps_since_repro = 0
-
-    def get_cooldown(self) -> int:
-        """
-        Returns the cooldown time after reproduction
-        """
-        return self._t_cooldown
+        self.steps_since_repro = 0
 
     def move(self, grid) -> None:
         """
@@ -58,24 +53,21 @@ class Herbivore(MobileEntity):
             # print(f"INFO:{self.loc}: herbivore reached lifespan")
             return
 
-        if self._steps_since_repro is not None:
-            self._steps_since_repro += 1
+        if self.steps_since_repro is not None:
+            self.steps_since_repro += 1
 
         next_move = self.get_next_move(grid, predator=False)
         next_move_entity = grid.grid[next_move]
 
-        if (
-            next_move_entity.get_type() == EntityType.HERBIVORE
-            and next_move != self.loc
-        ):
+        if next_move_entity.type == EntityType.HERBIVORE and next_move != self.loc:
             if Herbivore.check_reproduction_possibility(self, next_move_entity):
                 if self.reproduction(grid, next_move):
-                    self._steps_since_repro = 0
+                    self.reset_steps_since_repro()
                     next_move_entity.reset_steps_since_repro()
             self.curr_step += 1
             return
 
-        if next_move_entity.get_type() == EntityType.PLANT:
+        if next_move_entity.type == EntityType.PLANT:
             self.curr_step = 0
         else:
             self.curr_step += 1
@@ -110,10 +102,8 @@ class Herbivore(MobileEntity):
             true if herbivore can reproduce, false otherwise
         """
         return Herbivore.can_reproduce(
-            herb1.get_steps_since_repro(), herb1.get_cooldown()
-        ) and Herbivore.can_reproduce(
-            herb2.get_steps_since_repro(), herb2.get_cooldown()
-        )
+            herb1.steps_since_repro, herb1.t_cooldown
+        ) and Herbivore.can_reproduce(herb2.steps_since_repro, herb2.t_cooldown)
 
     def reproduction(self, grid, partner_loc: Tuple[int, int]) -> bool:
         """
@@ -134,7 +124,7 @@ class Herbivore(MobileEntity):
         grid.update_grid(
             repro_loc,
             Herbivore(
-                self.lifespan, repro_loc, self._radius, self._t_cooldown, self.cfg
+                self.lifespan, repro_loc, self._radius, self.t_cooldown, self.cfg
             ),
         )
         # print(f"INFO:{self.loc}: herbivore reproduced")

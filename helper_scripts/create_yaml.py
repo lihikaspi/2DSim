@@ -4,18 +4,30 @@ from omegaconf import OmegaConf
 
 
 class ENTITIES:
-    T_PLANT = 10
+    T_PLANT = 20
     T_HERBIVORE = 15
     R_HERBIVORE_SIGHT = 3
-    T_COOLDOWN = 20
-    T_PREDATOR = 20
-    R_PREDATOR_SIGHT = 5
+    T_COOLDOWN = 5
+    T_PREDATOR = 1
+    R_PREDATOR_SIGHT = 1
     PLANT_SPAWN_THRESHOLD = 0.5
+    MOVES = [
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, -1),
+        (0, 1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+    ]
+    NEVER_DEAD = -1
 
 
 class SIM:
     BOARD_SIZE = (5, 5)
-    TOTAL_STEPS = 5
+    TOTAL_STEPS = 20
+    SEED = 42
 
 
 class PRETTY_PRINT:

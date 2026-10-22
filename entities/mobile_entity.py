@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from collections import deque
 from typing import List, Tuple
 
+from omegaconf import DictConfig, ListConfig
+
 from entities.entity import Entity
 from entities.entity_type_enum import EntityType
 
@@ -13,7 +15,12 @@ class MobileEntity(ABC, Entity):
     """
 
     def __init__(
-        self, t: EntityType, lifespan: int, loc: Tuple[int, int], radius: int, cfg
+        self,
+        t: EntityType,
+        lifespan: int,
+        loc: Tuple[int, int],
+        radius: int,
+        cfg: DictConfig | ListConfig,
     ) -> None:
         """
         Initializes a mobile entity
@@ -23,7 +30,7 @@ class MobileEntity(ABC, Entity):
             lifespan (int): lifespan of the entity
             loc (Tuple[int, int]): location of the entity
             radius (int): sight radius for hunting
-            cfg: OmegaConf object
+            cfg (DictConfig | ListConfig): OmegaConf object
         """
         super().__init__(t, lifespan, loc, cfg)
         self._radius = radius
@@ -54,24 +61,13 @@ class MobileEntity(ABC, Entity):
             curr_row, curr_col = queue.popleft()
 
             if (
-                grid.grid[curr_row, curr_col].get_type() == target
+                grid.grid[curr_row, curr_col].type == target
                 and (curr_row, curr_col) != loc
             ):
                 target_cell = (curr_row, curr_col)
                 break
 
-            moves = [
-                (-1, -1),
-                (-1, 0),
-                (-1, 1),
-                (0, -1),
-                (0, 1),
-                (1, -1),
-                (1, 0),
-                (1, 1),
-            ]
-
-            for dr, dc in moves:
+            for dr, dc in self.cfg.entitien.moves:
                 nr, nc = curr_row + dr, curr_col + dc
                 if (
                     grid.is_valid_move(nr, nc, visited=visited)

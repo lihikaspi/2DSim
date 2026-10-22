@@ -2,6 +2,7 @@ import random
 from typing import List, Tuple
 
 import numpy as np
+from omegaconf import DictConfig, ListConfig
 
 from entities.entity import EmptySpace, Entity, Plant, Tree
 from entities.entity_type_enum import EntityType
@@ -14,13 +15,15 @@ class Grid:
     Grid object class. Handles all grid updates and checks
     """
 
-    def __init__(self, initial_grid: List[List[int]], cfg) -> None:
+    def __init__(
+        self, initial_grid: List[List[int]], cfg: DictConfig | ListConfig
+    ) -> None:
         """
         Initializes the grid using the given initial grid
 
         Args:
             initial_grid (List[List[int]]): Initial grid state
-            cfg: OmegaConf object
+            cfg (DictConfig | ListConfig): OmegaConf object
         """
         self.cfg = cfg
         self.num_rows = len(initial_grid)
@@ -141,7 +144,7 @@ class Grid:
         return self.grid[r_start:r_end, c_start:c_end]
 
     def is_valid_move(
-        self, row: int, col: int, visited: List[List[bool]] = None
+        self, row: int, col: int, visited: List[List[bool]] | None = None
     ) -> bool:
         """
         Checks if the given location is free to move to.
@@ -160,8 +163,8 @@ class Grid:
         return (
             self.is_in_grid(row, col)
             and (not visited[row][col] if visited is not None else True)
-            and self.grid[row, col].get_type() is not EntityType.TREE
-            and self.grid[row, col].get_type() is not EntityType.PREDATOR
+            and self.grid[row, col].type is not EntityType.TREE
+            and self.grid[row, col].type is not EntityType.PREDATOR
         )
 
     def is_in_radius(
@@ -193,10 +196,7 @@ class Grid:
         Returns:
             returns true if both given Herbivores can reproduce, false otherwise
         """
-        if (
-            ent1.get_type() == EntityType.HERBIVORE
-            and ent2.get_type() == EntityType.HERBIVORE
-        ):
+        if ent1.type == EntityType.HERBIVORE and ent2.type == EntityType.HERBIVORE:
             return Herbivore.check_reproduction_possibility(ent1, ent2)
         return True
 
@@ -232,10 +232,12 @@ class Grid:
             List[Tuple[int, int]]: list of locations of all empty neighbors
         """
         neighbors = self.get_truncated_grid(loc, 1).flatten()
-        empty_neighbors = [n.loc for n in neighbors if n.get_type() == EntityType.EMPTY]
+        empty_neighbors = [n.loc for n in neighbors if n.type == EntityType.EMPTY]
         return empty_neighbors
 
-    def get_all_type_cells(self, t: EntityType, only_loc: bool = True):
+    def get_all_type_cells(
+        self, t: EntityType, only_loc: bool = True
+    ) -> List[Tuple[int, int]] | List[Entity]:
         """
         Calculates all type cells in the board for a given type
 
@@ -247,7 +249,7 @@ class Grid:
             list of all type cells, containing either locations or entities
         """
         all_cells = self.grid.flatten()
-        type_cells = [c.loc if only_loc else c for c in all_cells if c.get_type() == t]
+        type_cells = [c.loc if only_loc else c for c in all_cells if c.type == t]
         return type_cells
 
     def step_per_type(self, t: EntityType) -> None:
@@ -281,7 +283,7 @@ class Grid:
         empty_cells = self.get_all_type_cells(EntityType.EMPTY)
         for _ in range(random.randint(0, len(empty_cells))):
             loc = random.choice(empty_cells)
-            if self.grid[loc].get_type() == EntityType.EMPTY and Plant.spawn(
+            if self.grid[loc].type == EntityType.EMPTY and Plant.spawn(
                 self.cfg.entities.plant_spawn_threshold
             ):
                 self.update_grid(loc, Plant(self.cfg.entities.t_plant, loc, self.cfg))
@@ -295,9 +297,6 @@ class Grid:
         """
         mapping = self.cfg.pretty_print
         return [
-            [
-                mapping[self.grid[r, c].get_type().name.lower()]
-                for c in range(self.num_cols)
-            ]
+            [mapping[self.grid[r, c].type.name.lower()] for c in range(self.num_cols)]
             for r in range(self.num_rows)
         ]

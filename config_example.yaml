@@ -6,11 +6,30 @@ entities:
   t_predator: 1
   r_predator_sight: 1
   plant_spawn_threshold: 0.5
+  moves:
+    - - -1
+      - -1
+    - - -1
+      - 0
+    - - -1
+      - 1
+    - - 0
+      - -1
+    - - 0
+      - 1
+    - - 1
+      - -1
+    - - 1
+      - 0
+    - - 1
+      - 1
+  never_dead: -1
 sim:
   board_size:
   - 5
   - 5
   total_steps: 40
+  seed: 42
 pretty_print:
   empty: .
   tree: ^

@@ -1,4 +1,6 @@
-from omegaconf import OmegaConf
+import random
+
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 from entities.entity_type_enum import EntityType
 from grid import Grid
@@ -9,12 +11,12 @@ class NatureGOLSimulation:
     Nature Game Of Life Simulation Handler
     """
 
-    def __init__(self, cfg, board_idx: int) -> None:
+    def __init__(self, cfg: DictConfig | ListConfig, board_idx: int) -> None:
         """
         Initializes the simulation
 
         Args:
-            cfg: OmegaConf config object
+            cfg (DictConfig | ListConfig): OmegaConf config object
             board_idx (int):  board index in the config file
         """
         self.cfg = cfg
@@ -62,12 +64,14 @@ class NatureGOLSimulation:
 
 
 def main():
-    print("********* START GAME *********")
     cfg = OmegaConf.load("config.yaml")
+    random.seed(cfg.seed)
+
+    print("********* START GAME *********")
     print("choose initial grid:")
-    seed = int(input().strip())
-    print(f"board chosen: {cfg.boards[seed][0]}")
-    sim = NatureGOLSimulation(cfg, seed)
+    initial_idx = int(input().strip())
+    print(f"board chosen: {cfg.boards[initial_idx][0]}")
+    sim = NatureGOLSimulation(cfg, initial_idx)
     sim.run_simulation()
     print("********* END GAME *********")
 

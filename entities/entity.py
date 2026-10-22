@@ -1,6 +1,8 @@
 import random
 from typing import Tuple
 
+from omegaconf import DictConfig, ListConfig
+
 from entities.entity_type_enum import EntityType
 
 
@@ -9,7 +11,13 @@ class Entity:
     Entity class
     """
 
-    def __init__(self, t: EntityType, lifespan: int, loc: Tuple[int, int], cfg) -> None:
+    def __init__(
+        self,
+        t: EntityType,
+        lifespan: int,
+        loc: Tuple[int, int],
+        cfg: DictConfig | ListConfig,
+    ) -> None:
         """
         Initializes the new entity
 
@@ -17,19 +25,13 @@ class Entity:
             t (EntityType): Entity type
             lifespan (int): Lifespan of the entity
             loc (Tuple[int, int]): Location of the entity
-            cfg: OmegaConf object
+            cfg (DictConfig | ListConfig): OmegaConf object
         """
         self.cfg = cfg
-        self._type = t
+        self.type = t
         self.lifespan = lifespan
         self.curr_step = 0
         self.loc = loc
-
-    def get_type(self) -> EntityType:
-        """
-        Returns the entity type
-        """
-        return self._type
 
     def is_still_alive(self) -> bool:
         """
@@ -45,8 +47,8 @@ class EmptySpace(Entity):
     Empty space class
     """
 
-    def __init__(self, loc: Tuple[int, int], cfg):
-        super().__init__(EntityType.EMPTY, -1, loc, cfg)
+    def __init__(self, loc: Tuple[int, int], cfg: DictConfig | ListConfig) -> None:
+        super().__init__(EntityType.EMPTY, cfg.entities.never_dead, loc, cfg)
 
 
 class Tree(Entity):
@@ -54,8 +56,8 @@ class Tree(Entity):
     Tree class. Trees are treated as walls on the board and are impassable to all entities
     """
 
-    def __init__(self, loc: Tuple[int, int], cfg):
-        super().__init__(EntityType.TREE, -1, loc, cfg)
+    def __init__(self, loc: Tuple[int, int], cfg: DictConfig | ListConfig) -> None:
+        super().__init__(EntityType.TREE, cfg.entities.never_dead, loc, cfg)
 
 
 class Plant(Entity):
@@ -63,7 +65,9 @@ class Plant(Entity):
     Plant class
     """
 
-    def __init__(self, lifespan: int, loc: Tuple[int, int], cfg):
+    def __init__(
+        self, lifespan: int, loc: Tuple[int, int], cfg: DictConfig | ListConfig
+    ) -> None:
         super().__init__(EntityType.PLANT, lifespan, loc, cfg)
 
     @staticmethod
@@ -84,4 +88,5 @@ class Plant(Entity):
         """
         Increases the step counter
         """
+        # TODO decide
         self.curr_step += 1
