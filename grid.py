@@ -31,7 +31,7 @@ class Grid:
         self.grid = self.set_initial_grid(initial_grid)
 
     @staticmethod
-    def _get_new_entity(val: int, loc: Tuple[int, int], cfg) -> Entity:
+    def get_new_entity(val: int, loc: Tuple[int, int], cfg) -> Entity:
         """
         create a new entity of the given type in the given location. raises error if given type is not a valid.
 
@@ -63,7 +63,6 @@ class Grid:
                 cfg.entities.t_predator, loc, cfg.entities.r_predator_sight, cfg
             )
         else:
-            # TODO: print error message without traceback
             raise ValueError(f"Unknown entity type: {val}")
 
     def set_initial_grid(self, initial_grid: List[List[int]]) -> np.ndarray:
@@ -80,7 +79,7 @@ class Grid:
         grid = np.ndarray(shape=(self.num_rows, self.num_cols), dtype=Entity)
         for row in range(self.num_rows):
             for col in range(self.num_cols):
-                grid[row, col] = self._get_new_entity(
+                grid[row, col] = self.get_new_entity(
                     initial_grid[row][col], (row, col), self.cfg
                 )
         return grid
@@ -163,8 +162,7 @@ class Grid:
         return (
             self.is_in_grid(row, col)
             and (not visited[row][col] if visited is not None else True)
-            and self.grid[row, col].type is not EntityType.TREE
-            and self.grid[row, col].type is not EntityType.PREDATOR
+            and self.grid[row, col].type not in [EntityType.TREE, EntityType.PREDATOR]
         )
 
     def is_in_radius(
@@ -265,7 +263,7 @@ class Grid:
             if id(e) in moved or self.grid[e.loc] is not e:
                 continue
             if t == EntityType.PLANT:
-                e.increase_step()
+                e.increase_age()
                 if not e.is_still_alive():
                     self.update_grid(e.loc, EmptySpace(e.loc, self.cfg))
             elif t == EntityType.HERBIVORE or t == EntityType.PREDATOR:

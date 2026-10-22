@@ -41,6 +41,29 @@ class Entity:
         """
         return self.curr_step < self.lifespan
 
+    def kill(self) -> None:
+        """
+        kills the entity
+        """
+        if self.lifespan == self.cfg.entities.never_dead:
+            raise ValueError("This entity does not have an age")
+        self.curr_step = self.lifespan
+
+    def increase_age(self) -> None:
+        """
+        Increases the age of the entity
+        """
+        if self.lifespan == self.cfg.entities.never_dead:
+            raise ValueError("This entity does not have an age")
+        self.curr_step += 1
+
+    def refuel_age(self) -> None:
+        """
+        resets the age of the entity
+        """
+        if self.lifespan == self.cfg.entities.never_dead:
+            raise ValueError("This entity does not have an age")
+        self.curr_step = 0
 
 class EmptySpace(Entity):
     """
@@ -83,10 +106,3 @@ class Plant(Entity):
 
         """
         return random.random() > spawn_threshold
-
-    def increase_step(self):
-        """
-        Increases the step counter
-        """
-        # TODO decide
-        self.curr_step += 1

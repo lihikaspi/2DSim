@@ -41,10 +41,13 @@ class Predator(MobileEntity):
         next_move = self.get_next_move(grid, predator=True)
         target_entity = grid.grid[next_move]
 
+        if target_entity.type != EntityType.PLANT:
+            target_entity.kill()
+
         if target_entity.type == EntityType.HERBIVORE:
-            self.curr_step = 0
+            self.refuel_age()
         else:
-            self.curr_step += 1
+            self.increase_age()
 
         # print(f"INFO:{self.loc} -> {next_move}: predator moved")
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))

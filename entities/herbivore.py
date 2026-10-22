@@ -68,9 +68,9 @@ class Herbivore(MobileEntity):
             return
 
         if next_move_entity.type == EntityType.PLANT:
-            self.curr_step = 0
+            self.refuel_age()
         else:
-            self.curr_step += 1
+            self.increase_age()
 
         # print(f"INFO:{self.loc} -> {next_move}: herbivore moved")
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
