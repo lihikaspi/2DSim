@@ -1,9 +1,12 @@
 import random
+from pathlib import Path
+from typing import cast
 
-from omegaconf import DictConfig, ListConfig, OmegaConf
+from omegaconf import OmegaConf
 
 from entities.entity_type_enum import EntityType
 from grid import Grid
+from config import Config
 
 
 class NatureGOLSimulation:
@@ -11,12 +14,12 @@ class NatureGOLSimulation:
     Nature Game Of Life Simulation Handler
     """
 
-    def __init__(self, cfg: DictConfig | ListConfig, board_idx: int) -> None:
+    def __init__(self, cfg: Config, board_idx: int) -> None:
         """
         Initializes the simulation
 
         Args:
-            cfg (DictConfig | ListConfig): OmegaConf config object
+            cfg (Config): OmegaConf config object
             board_idx (int):  board index in the config file
         """
         self.cfg = cfg
@@ -62,9 +65,15 @@ class NatureGOLSimulation:
         for row in simple_grid:
             print(" ".join(row))
 
+def load_config(yaml_path: str = "config.yaml") -> Config:
+    schema = OmegaConf.structured(Config)
+    yaml_conf = OmegaConf.load(yaml_path)
+    merged_conf = OmegaConf.merge(schema, yaml_conf)
+    return cast(Config, OmegaConf.to_object(merged_conf))
+
 
 def main():
-    cfg = OmegaConf.load("config.yaml")
+    cfg = load_config("./config.yaml")
     random.seed(cfg.sim.seed)
 
     print("********* START GAME *********")
