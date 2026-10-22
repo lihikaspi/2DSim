@@ -1,3 +1,4 @@
 *.gif
 .venv/
 .idea/
+config.yaml
