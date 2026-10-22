@@ -6,6 +6,7 @@ from omegaconf import DictConfig, ListConfig
 from entities.entity import EmptySpace
 from entities.entity_type_enum import EntityType
 from entities.mobile_entity import MobileEntity
+from entities.location import Location
 
 
 class Herbivore(MobileEntity):
@@ -13,20 +14,13 @@ class Herbivore(MobileEntity):
     Herbivore class. Inherits from MobileEntity
     """
 
-    def __init__(
-        self,
-        lifespan: int,
-        loc: Tuple[int, int],
-        r: int,
-        t_cooldown: int,
-        cfg: DictConfig | ListConfig,
-    ) -> None:
+    def __init__(self, lifespan: int, loc: Location, r: int, t_cooldown: int, cfg: DictConfig | ListConfig) -> None:
         """
         Initializes a Herbivore object
 
         Args:
             lifespan (int): Lifespan of the entity
-            loc (Tuple[int, int]): Location of the entity
+            loc (Location): Location of the entity
             r (int): sight radius for hunting
             t_cooldown (int): Cooldown time after reproduction
             cfg (DictConfig | ListConfig): OmegaConf object
@@ -50,7 +44,6 @@ class Herbivore(MobileEntity):
         """
         if not self.is_still_alive():
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
-            # print(f"INFO:{self.loc}: herbivore reached lifespan")
             return
 
         if self.steps_since_repro is not None:
@@ -72,7 +65,6 @@ class Herbivore(MobileEntity):
         else:
             self.increase_age()
 
-        # print(f"INFO:{self.loc} -> {next_move}: herbivore moved")
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move
         grid.update_grid(next_move, self)
@@ -105,7 +97,7 @@ class Herbivore(MobileEntity):
             herb1.steps_since_repro, herb1.t_cooldown
         ) and Herbivore.can_reproduce(herb2.steps_since_repro, herb2.t_cooldown)
 
-    def reproduction(self, grid, partner_loc: Tuple[int, int]) -> bool:
+    def reproduction(self, grid, partner_loc: Location) -> bool:
         """
         performs the reproduction of a new Herbivore. If there are no empty neighboring cells reproduction is canceled
 
@@ -118,7 +110,6 @@ class Herbivore(MobileEntity):
         """
         neighbors = grid.get_empty_neighbors(partner_loc)
         if not neighbors:
-            # print(f"INFO:{self.loc}: no empty neighboring cell, can't reproduce")
             return False
         repro_loc = random.choice(neighbors)
         grid.update_grid(
@@ -127,6 +118,4 @@ class Herbivore(MobileEntity):
                 self.lifespan, repro_loc, self._radius, self.t_cooldown, self.cfg
             ),
         )
-        # print(f"INFO:{self.loc}: herbivore reproduced")
-        # print(f"INFO:{repro_loc}: new herbivore spawned after reproduction")
         return True

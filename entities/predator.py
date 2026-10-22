@@ -5,6 +5,7 @@ from omegaconf import DictConfig, ListConfig
 from entities.entity import EmptySpace
 from entities.entity_type_enum import EntityType
 from entities.mobile_entity import MobileEntity
+from entities.location import Location
 
 
 class Predator(MobileEntity):
@@ -12,15 +13,13 @@ class Predator(MobileEntity):
     Predator class. Inherits from MobileEntity
     """
 
-    def __init__(
-        self, lifespan: int, loc: Tuple[int, int], r: int, cfg: DictConfig | ListConfig
-    ) -> None:
+    def __init__(self, lifespan: int, loc: Location, r: int, cfg: DictConfig | ListConfig) -> None:
         """
         Initializes the predator
 
         Args:
             lifespan (int): Lifespan of the predator
-            loc (Tuple[int, int]): Location of the predator
+            loc (Location): Location of the predator
             r (int): Sight radius for hunting
             cfg: OmegaConf object
         """
@@ -35,7 +34,6 @@ class Predator(MobileEntity):
         """
         if not self.is_still_alive():
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
-            # print(f"INFO:{self.loc}: predator reached lifespan")
             return
 
         next_move = self.get_next_move(grid, predator=True)
@@ -49,7 +47,6 @@ class Predator(MobileEntity):
         else:
             self.increase_age()
 
-        # print(f"INFO:{self.loc} -> {next_move}: predator moved")
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move
         grid.update_grid(next_move, self)

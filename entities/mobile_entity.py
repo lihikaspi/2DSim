@@ -7,6 +7,7 @@ from omegaconf import DictConfig, ListConfig
 
 from entities.entity import Entity
 from entities.entity_type_enum import EntityType
+from entities.location import Location
 
 
 class MobileEntity(ABC, Entity):
@@ -14,46 +15,37 @@ class MobileEntity(ABC, Entity):
     Abstract mobile Entity class. Inherits from Entity
     """
 
-    def __init__(
-        self,
-        t: EntityType,
-        lifespan: int,
-        loc: Tuple[int, int],
-        radius: int,
-        cfg: DictConfig | ListConfig,
-    ) -> None:
+    def __init__(self, t: EntityType, lifespan: int, loc: Location, radius: int, cfg: DictConfig | ListConfig) -> None:
         """
         Initializes a mobile entity
 
         Args:
             t (EntityType): entity type
             lifespan (int): lifespan of the entity
-            loc (Tuple[int, int]): location of the entity
+            loc (Location): location of the entity
             radius (int): sight radius for hunting
             cfg (DictConfig | ListConfig): OmegaConf object
         """
         super().__init__(t, lifespan, loc, cfg)
         self._radius = radius
 
-    def bfs(
-        self, grid, target: EntityType, loc: Tuple[int, int]
-    ) -> List[Tuple[int, int]]:
+    def bfs(self, grid, target: EntityType, loc: Location) -> List[Location]:
         """
         Breadth-first search (BFS) finding the shortest path to target within the sight radius
 
         Args:
             grid: Grid object
             target (EntityType): target entity type
-            loc (Tuple[int, int]): starting location of the entity
+            loc (Location): starting location of the entity
 
         Returns:
-            List[Tuple[int, int]]: path from the starting entity to the closest target within sight radius
+            List[Location]: path from the starting entity to the closest target within sight radius
         """
         rows, cols = grid.grid.shape
-        queue = deque([loc])
+        queue = deque([loc.coords])
         visited = [[False] * cols for _ in range(rows)]
-        visited[loc[0]][loc[1]] = True
-        parent = {loc: None}
+        visited[loc.row][loc.col] = True
+        parent = {loc.coords: None}
 
         target_cell = None
 
@@ -62,7 +54,7 @@ class MobileEntity(ABC, Entity):
 
             if (
                 grid.grid[curr_row, curr_col].type == target
-                and (curr_row, curr_col) != loc
+                and (curr_row, curr_col) != loc.coords
             ):
                 target_cell = (curr_row, curr_col)
                 break
@@ -87,11 +79,9 @@ class MobileEntity(ABC, Entity):
             path.append(curr)
             curr = parent[curr]
         path.reverse()
-
-        # print(f"INFO:{self.loc}: found path to {target.name} -> {path}")
         return path
 
-    def get_random_valid_move(self, grid) -> Tuple[int, int]:
+    def get_random_valid_move(self, grid) -> Location:
         """
         Calculates a random valid move
 
@@ -103,11 +93,10 @@ class MobileEntity(ABC, Entity):
         """
         valid_moves = grid.get_valid_moves(self.loc)
         if not valid_moves:
-            # print(f"INFO:{self.loc}: no valid moves, entity not moving!")
             return self.loc
         return random.choice(valid_moves)
 
-    def get_next_move(self, grid, predator: bool = False) -> Tuple[int, int]:
+    def get_next_move(self, grid, predator: bool = False) -> Location:
         """
         Calculates the next move for the entity
 

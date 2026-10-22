@@ -4,6 +4,7 @@ from typing import Tuple
 from omegaconf import DictConfig, ListConfig
 
 from entities.entity_type_enum import EntityType
+from entities.location import Location
 
 
 class Entity:
@@ -11,20 +12,14 @@ class Entity:
     Entity class
     """
 
-    def __init__(
-        self,
-        t: EntityType,
-        lifespan: int,
-        loc: Tuple[int, int],
-        cfg: DictConfig | ListConfig,
-    ) -> None:
+    def __init__(self, t: EntityType, lifespan: int, loc: Location, cfg: DictConfig | ListConfig) -> None:
         """
         Initializes the new entity
 
         Args:
             t (EntityType): Entity type
             lifespan (int): Lifespan of the entity
-            loc (Tuple[int, int]): Location of the entity
+            loc (Location): Location of the entity
             cfg (DictConfig | ListConfig): OmegaConf object
         """
         self.cfg = cfg
@@ -70,7 +65,7 @@ class EmptySpace(Entity):
     Empty space class
     """
 
-    def __init__(self, loc: Tuple[int, int], cfg: DictConfig | ListConfig) -> None:
+    def __init__(self, loc: Location, cfg: DictConfig | ListConfig) -> None:
         super().__init__(EntityType.EMPTY, cfg.entities.never_dead, loc, cfg)
 
 
@@ -79,7 +74,7 @@ class Tree(Entity):
     Tree class. Trees are treated as walls on the board and are impassable to all entities
     """
 
-    def __init__(self, loc: Tuple[int, int], cfg: DictConfig | ListConfig) -> None:
+    def __init__(self, loc: Location, cfg: DictConfig | ListConfig) -> None:
         super().__init__(EntityType.TREE, cfg.entities.never_dead, loc, cfg)
 
 
@@ -88,9 +83,7 @@ class Plant(Entity):
     Plant class
     """
 
-    def __init__(
-        self, lifespan: int, loc: Tuple[int, int], cfg: DictConfig | ListConfig
-    ) -> None:
+    def __init__(self, lifespan: int, loc: Location, cfg: DictConfig | ListConfig) -> None:
         super().__init__(EntityType.PLANT, lifespan, loc, cfg)
 
     @staticmethod
