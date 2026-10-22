@@ -5,6 +5,7 @@ from typing import List, Tuple
 
 from omegaconf import DictConfig, ListConfig
 
+from config import Config
 from entities.entity import Entity
 from entities.entity_type_enum import EntityType
 from entities.location import Location
@@ -15,7 +16,7 @@ class MobileEntity(ABC, Entity):
     Abstract mobile Entity class. Inherits from Entity
     """
 
-    def __init__(self, t: EntityType, lifespan: int, loc: Location, radius: int, cfg: DictConfig | ListConfig) -> None:
+    def __init__(self, t: EntityType, lifespan: int, loc: Location, radius: int, cfg: Config) -> None:
         """
         Initializes a mobile entity
 
@@ -24,7 +25,7 @@ class MobileEntity(ABC, Entity):
             lifespan (int): lifespan of the entity
             loc (Location): location of the entity
             radius (int): sight radius for hunting
-            cfg (DictConfig | ListConfig): OmegaConf object
+            cfg (Config): OmegaConf object
         """
         super().__init__(t, lifespan, loc, cfg)
         self._radius = radius
@@ -62,9 +63,9 @@ class MobileEntity(ABC, Entity):
             for dr, dc in self.cfg.entities.moves:
                 nr, nc = curr_row + dr, curr_col + dc
                 if (
-                    grid.is_valid_move(nr, nc, visited=visited)
+                    grid.is_valid_move(Location(nr, nc), visited=visited)
                     and grid.check_herbivores_repro(self, grid.grid[nr, nc])
-                    and grid.is_in_radius(loc, nr, nc, self._radius)
+                    and grid.is_in_radius(loc, Location(nr, nc), self._radius)
                 ):
                     visited[nr][nc] = True
                     parent[(nr, nc)] = (curr_row, curr_col)
@@ -76,7 +77,7 @@ class MobileEntity(ABC, Entity):
         path = []
         curr = target_cell
         while curr is not None:
-            path.append(curr)
+            path.append(Location(curr[0], curr[1]))
             curr = parent[curr]
         path.reverse()
         return path

@@ -4,6 +4,7 @@ from typing import List, Tuple
 import numpy as np
 from omegaconf import DictConfig, ListConfig
 
+from config import Config
 from entities.entity import EmptySpace, Entity, Plant, Tree
 from entities.entity_type_enum import EntityType
 from entities.herbivore import Herbivore
@@ -17,13 +18,13 @@ class Grid:
     """
 
     def __init__(
-        self, initial_grid: List[List[int]], cfg: DictConfig | ListConfig) -> None:
+        self, initial_grid: List[List[int]], cfg: Config) -> None:
         """
         Initializes the grid using the given initial grid
 
         Args:
             initial_grid (List[List[int]]): Initial grid state
-            cfg (DictConfig | ListConfig): OmegaConf object
+            cfg (Config): OmegaConf object
         """
         self.cfg = cfg
         self.num_rows = len(initial_grid)
@@ -202,8 +203,8 @@ class Grid:
         moves = [
             n.loc
             for n in neighbors
-            if n.loc != loc
-            and self.is_valid_move(n.loc[0], n.loc[1])
+            if n.loc.coords != loc.coords
+            and self.is_valid_move(n.loc)
             and self.check_herbivores_repro(self.grid[loc.coords], n)
         ]
         return moves
@@ -247,7 +248,7 @@ class Grid:
         ents = self.get_all_type_cells(t, only_loc=False)
         moved = set()
         for e in ents:
-            if id(e) in moved or self.grid[e.loc] is not e:
+            if id(e) in moved or self.grid[e.loc.coords] is not e:
                 continue
             if t == EntityType.PLANT:
                 e.increase_age()
@@ -268,12 +269,12 @@ class Grid:
         empty_cells = self.get_all_type_cells(EntityType.EMPTY)
         for _ in range(random.randint(0, len(empty_cells))):
             loc = random.choice(empty_cells)
-            if self.grid[loc].type == EntityType.EMPTY and Plant.spawn(
-                self.cfg.entities.plant_spawn_threshold
+            if self.grid[loc.coords].type == EntityType.EMPTY and Plant.spawn(
+                    self.cfg.entities.plant_spawn_threshold
             ):
                 self.update_grid(loc, Plant(self.cfg.entities.t_plant, loc, self.cfg))
 
-    def simplify(self) -> List[List[int]]:
+    def simplify(self) -> List[List[str]]:
         """
         Simplifies the grid to be print ready. Uses the entity type to char mapping found in the config object
 
@@ -282,6 +283,9 @@ class Grid:
         """
         mapping = self.cfg.pretty_print
         return [
-            [mapping[self.grid[r, c].type.name.lower()] for c in range(self.num_cols)]
+            [
+                getattr(mapping, self.grid[r, c].type.name.lower())
+                for c in range(self.num_cols)
+            ]
             for r in range(self.num_rows)
         ]

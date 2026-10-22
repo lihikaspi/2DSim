@@ -3,6 +3,7 @@ from typing import Tuple
 
 from omegaconf import DictConfig, ListConfig
 
+from config import Config
 from entities.entity import EmptySpace
 from entities.entity_type_enum import EntityType
 from entities.mobile_entity import MobileEntity
@@ -14,7 +15,7 @@ class Herbivore(MobileEntity):
     Herbivore class. Inherits from MobileEntity
     """
 
-    def __init__(self, lifespan: int, loc: Location, r: int, t_cooldown: int, cfg: DictConfig | ListConfig) -> None:
+    def __init__(self, lifespan: int, loc: Location, r: int, t_cooldown: int, cfg: Config) -> None:
         """
         Initializes a Herbivore object
 
@@ -23,7 +24,7 @@ class Herbivore(MobileEntity):
             loc (Location): Location of the entity
             r (int): sight radius for hunting
             t_cooldown (int): Cooldown time after reproduction
-            cfg (DictConfig | ListConfig): OmegaConf object
+            cfg (Config): OmegaConf object
         """
         super().__init__(EntityType.HERBIVORE, lifespan, loc, r, cfg)
         self.t_cooldown = t_cooldown
@@ -50,9 +51,9 @@ class Herbivore(MobileEntity):
             self.steps_since_repro += 1
 
         next_move = self.get_next_move(grid, predator=False)
-        next_move_entity = grid.grid[next_move]
+        next_move_entity = grid.grid[next_move.coords]
 
-        if next_move_entity.type == EntityType.HERBIVORE and next_move != self.loc:
+        if next_move_entity.type == EntityType.HERBIVORE and next_move.coords != self.loc.coords:
             if Herbivore.check_reproduction_possibility(self, next_move_entity):
                 if self.reproduction(grid, next_move):
                     self.reset_steps_since_repro()
