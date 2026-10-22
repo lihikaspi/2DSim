@@ -44,25 +44,26 @@ class Grid:
         Returns:
             new entity
         """
-        ent = EntityType(val)
-        if ent == EntityType.EMPTY:
-            return EmptySpace(loc, cfg)
-        elif ent == EntityType.TREE:
-            return Tree(loc, cfg)
-        elif ent == EntityType.PLANT:
-            return Plant(cfg.entities.t_plant, loc, cfg)
-        elif ent == EntityType.HERBIVORE:
-            return Herbivore(
-                cfg.entities.t_herbivore,
-                loc,
-                cfg.entities.r_herbivore_sight,
-                cfg.entities.t_cooldown,
-                cfg,)
-        elif ent == EntityType.PREDATOR:
-            return Predator(
-                cfg.entities.t_predator, loc, cfg.entities.r_predator_sight, cfg)
-        else:
-            raise ValueError(f"Unknown entity type: {val}")
+        try:
+            ent = EntityType(val)
+        except ValueError:
+            raise ValueError(f"Unknown entity type value: {val}")
+
+        e_cfg = cfg.entities
+        builders = {
+            EntityType.EMPTY: lambda: EmptySpace(loc, cfg),
+            EntityType.TREE: lambda: Tree(loc, cfg),
+            EntityType.PLANT: lambda: Plant(e_cfg.t_plant, loc, cfg),
+            EntityType.HERBIVORE: lambda: Herbivore(
+                e_cfg.t_herbivore, loc, e_cfg.r_herbivore_sight, e_cfg.t_cooldown, cfg),
+            EntityType.PREDATOR: lambda: Predator(
+                e_cfg.t_predator, loc, e_cfg.r_predator_sight, cfg),
+        }
+
+        builder = builders.get(ent)
+        if not builder:
+            raise ValueError(f"No constructor registered for: {ent}")
+        return builder()
 
     def set_initial_grid(self, initial_grid: List[List[int]]) -> np.ndarray:
         """
