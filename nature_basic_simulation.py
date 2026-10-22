@@ -8,6 +8,7 @@ class NatureGOLSimulation:
     """
     Nature Game Of Life Simulation Handler
     """
+
     def __init__(self, cfg, board_idx: int) -> None:
         """
         Initializes the simulation
@@ -52,10 +53,13 @@ class NatureGOLSimulation:
         """
         simple_grid = self.grid.simplify()
         self.states.append(simple_grid)
-        header = "board at initial state" if initial else f"board at step {self.curr_step}"
+        header = (
+            "board at initial state" if initial else f"board at step {self.curr_step}"
+        )
         print(header)
         for row in simple_grid:
             print(" ".join(row))
+
 
 def main():
     print("********* START GAME *********")
@@ -67,7 +71,6 @@ def main():
     sim.run_simulation()
     print("********* END GAME *********")
 
+
 if __name__ == "__main__":
     main()
-
-

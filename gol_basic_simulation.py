@@ -14,6 +14,7 @@ class GOLSimulation:
     """
     Game Of Life Simulation Class
     """
+
     def __init__(self, seed: str, steps: int) -> None:
         """
         Initializes the simulation
@@ -29,7 +30,7 @@ class GOLSimulation:
         self.curr_step = 0
         self.pretty_print(initial=True)
 
-    def load_seed(self, seed: str) -> (list, int ,int):
+    def load_seed(self, seed: str) -> (list, int, int):
         """
         Loads the initial greed from the predefined files in `seed_templates/`
         :param seed: seed template name
@@ -138,7 +139,6 @@ class GOLSimulation:
             to_print.append(line)
         for p in to_print:
             print(p)
-
 
     def run_simulation(self) -> None:
         """

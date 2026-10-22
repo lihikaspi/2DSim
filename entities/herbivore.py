@@ -10,7 +10,10 @@ class Herbivore(MobileEntity):
     """
     Herbivore class. Inherits from MobileEntity
     """
-    def __init__(self, lifespan: int, loc: Tuple[int, int], r: int, t_cooldown: int, cfg) -> None:
+
+    def __init__(
+        self, lifespan: int, loc: Tuple[int, int], r: int, t_cooldown: int, cfg
+    ) -> None:
         """
         Initializes a Herbivore object
 
@@ -61,7 +64,10 @@ class Herbivore(MobileEntity):
         next_move = self.get_next_move(grid, predator=False)
         next_move_entity = grid.grid[next_move]
 
-        if next_move_entity.get_type() == EntityType.HERBIVORE and next_move != self.loc:
+        if (
+            next_move_entity.get_type() == EntityType.HERBIVORE
+            and next_move != self.loc
+        ):
             if Herbivore.check_reproduction_possibility(self, next_move_entity):
                 if self.reproduction(grid, next_move):
                     self._steps_since_repro = 0
@@ -93,7 +99,7 @@ class Herbivore(MobileEntity):
         return steps_since is None or steps_since >= cooldown
 
     @staticmethod
-    def check_reproduction_possibility(herb1:Herbivore, herb2:Herbivore) -> bool:
+    def check_reproduction_possibility(herb1: Herbivore, herb2: Herbivore) -> bool:
         """
         checks if two herbivores can reproduce with each other
         Args:
@@ -103,8 +109,11 @@ class Herbivore(MobileEntity):
         Returns:
             true if herbivore can reproduce, false otherwise
         """
-        return (Herbivore.can_reproduce(herb1.get_steps_since_repro(), herb1.get_cooldown())
-                and Herbivore.can_reproduce(herb2.get_steps_since_repro(), herb2.get_cooldown()))
+        return Herbivore.can_reproduce(
+            herb1.get_steps_since_repro(), herb1.get_cooldown()
+        ) and Herbivore.can_reproduce(
+            herb2.get_steps_since_repro(), herb2.get_cooldown()
+        )
 
     def reproduction(self, grid, partner_loc: Tuple[int, int]) -> bool:
         """
@@ -122,7 +131,12 @@ class Herbivore(MobileEntity):
             # print(f"INFO:{self.loc}: no empty neighboring cell, can't reproduce")
             return False
         repro_loc = random.choice(neighbors)
-        grid.update_grid(repro_loc, Herbivore(self.lifespan, repro_loc, self._radius, self._t_cooldown, self.cfg))
+        grid.update_grid(
+            repro_loc,
+            Herbivore(
+                self.lifespan, repro_loc, self._radius, self._t_cooldown, self.cfg
+            ),
+        )
         # print(f"INFO:{self.loc}: herbivore reproduced")
         # print(f"INFO:{repro_loc}: new herbivore spawned after reproduction")
         return True

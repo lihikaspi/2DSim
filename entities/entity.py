@@ -8,6 +8,7 @@ class Entity:
     """
     Entity class
     """
+
     def __init__(self, t: EntityType, lifespan: int, loc: Tuple[int, int], cfg) -> None:
         """
         Initializes the new entity
@@ -38,24 +39,30 @@ class Entity:
         """
         return self.curr_step < self.lifespan
 
+
 class EmptySpace(Entity):
     """
     Empty space class
     """
+
     def __init__(self, loc: Tuple[int, int], cfg):
         super().__init__(EntityType.EMPTY, -1, loc, cfg)
+
 
 class Tree(Entity):
     """
     Tree class. Trees are treated as walls on the board and are impassable to all entities
     """
+
     def __init__(self, loc: Tuple[int, int], cfg):
         super().__init__(EntityType.TREE, -1, loc, cfg)
+
 
 class Plant(Entity):
     """
     Plant class
     """
+
     def __init__(self, lifespan: int, loc: Tuple[int, int], cfg):
         super().__init__(EntityType.PLANT, lifespan, loc, cfg)
 

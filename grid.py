@@ -13,6 +13,7 @@ class Grid:
     """
     Grid object class. Handles all grid updates and checks
     """
+
     def __init__(self, initial_grid: List[List[int]], cfg) -> None:
         """
         Initializes the grid using the given initial grid
@@ -47,11 +48,19 @@ class Grid:
         elif ent == EntityType.PLANT:
             return Plant(cfg.entities.t_plant, loc, cfg)
         elif ent == EntityType.HERBIVORE:
-            return Herbivore(cfg.entities.t_herbivore, loc, cfg.entities.r_herbivore_sight, cfg.entities.t_cooldown, cfg)
+            return Herbivore(
+                cfg.entities.t_herbivore,
+                loc,
+                cfg.entities.r_herbivore_sight,
+                cfg.entities.t_cooldown,
+                cfg,
+            )
         elif ent == EntityType.PREDATOR:
-            return Predator(cfg.entities.t_predator, loc, cfg.entities.r_predator_sight, cfg)
+            return Predator(
+                cfg.entities.t_predator, loc, cfg.entities.r_predator_sight, cfg
+            )
         else:
-            #TODO: print error message without traceback
+            # TODO: print error message without traceback
             raise ValueError(f"Unknown entity type: {val}")
 
     def set_initial_grid(self, initial_grid: List[List[int]]) -> np.ndarray:
@@ -68,7 +77,9 @@ class Grid:
         grid = np.ndarray(shape=(self.num_rows, self.num_cols), dtype=Entity)
         for row in range(self.num_rows):
             for col in range(self.num_cols):
-                grid[row, col] = self._get_new_entity(initial_grid[row][col], (row, col), self.cfg)
+                grid[row, col] = self._get_new_entity(
+                    initial_grid[row][col], (row, col), self.cfg
+                )
         return grid
 
     def is_in_grid(self, x: int, y: int) -> bool:
@@ -95,7 +106,9 @@ class Grid:
         """
         self.grid[loc] = new_ent
 
-    def get_radius_coords(self, loc: Tuple[int, int], radius: int) -> Tuple[int, int, int, int]:
+    def get_radius_coords(
+        self, loc: Tuple[int, int], radius: int
+    ) -> Tuple[int, int, int, int]:
         """
         Calculates the starting and ending indexes of the rows and columns from the main grid to include only cells
         within a given radius of the given location
@@ -113,7 +126,7 @@ class Grid:
         c_end = min(self.num_cols, loc[1] + radius + 1)
         return r_start, r_end, c_start, c_end
 
-    def get_truncated_grid(self, loc: Tuple[int, int], radius:int) -> np.ndarray:
+    def get_truncated_grid(self, loc: Tuple[int, int], radius: int) -> np.ndarray:
         """
         Truncates the main grid in a given radius around the given position
 
@@ -127,7 +140,9 @@ class Grid:
         r_start, r_end, c_start, c_end = self.get_radius_coords(loc, radius)
         return self.grid[r_start:r_end, c_start:c_end]
 
-    def is_valid_move(self, row: int, col: int, visited: List[List[bool]] = None) -> bool:
+    def is_valid_move(
+        self, row: int, col: int, visited: List[List[bool]] = None
+    ) -> bool:
         """
         Checks if the given location is free to move to.
 
@@ -142,12 +157,16 @@ class Grid:
         Returns:
             true if location is free to move to, false otherwise
         """
-        return (self.is_in_grid(row, col)
-                and (not visited[row][col] if visited is not None else True)
-                and self.grid[row, col].get_type() is not EntityType.TREE
-                and self.grid[row, col].get_type() is not EntityType.PREDATOR)
+        return (
+            self.is_in_grid(row, col)
+            and (not visited[row][col] if visited is not None else True)
+            and self.grid[row, col].get_type() is not EntityType.TREE
+            and self.grid[row, col].get_type() is not EntityType.PREDATOR
+        )
 
-    def is_in_radius(self, loc: Tuple[int, int], row: int, col: int, radius: int) -> bool:
+    def is_in_radius(
+        self, loc: Tuple[int, int], row: int, col: int, radius: int
+    ) -> bool:
         """
         Checks if the given position is within the radius of the given location
 
@@ -174,7 +193,10 @@ class Grid:
         Returns:
             returns true if both given Herbivores can reproduce, false otherwise
         """
-        if ent1.get_type() == EntityType.HERBIVORE and ent2.get_type() == EntityType.HERBIVORE:
+        if (
+            ent1.get_type() == EntityType.HERBIVORE
+            and ent2.get_type() == EntityType.HERBIVORE
+        ):
             return Herbivore.check_reproduction_possibility(ent1, ent2)
         return True
 
@@ -190,8 +212,13 @@ class Grid:
 
         """
         neighbors = self.get_truncated_grid(loc, 1).flatten()
-        moves = [n.loc for n in neighbors if n.loc != loc and self.is_valid_move(n.loc[0], n.loc[1])
-                 and self.check_herbivores_repro(self.grid[loc], n)]
+        moves = [
+            n.loc
+            for n in neighbors
+            if n.loc != loc
+            and self.is_valid_move(n.loc[0], n.loc[1])
+            and self.check_herbivores_repro(self.grid[loc], n)
+        ]
         return moves
 
     def get_empty_neighbors(self, loc: Tuple[int, int]) -> List[Tuple[int, int]]:
@@ -254,7 +281,9 @@ class Grid:
         empty_cells = self.get_all_type_cells(EntityType.EMPTY)
         for _ in range(random.randint(0, len(empty_cells))):
             loc = random.choice(empty_cells)
-            if self.grid[loc].get_type() == EntityType.EMPTY and Plant.spawn(self.cfg.entities.plant_spawn_threshold):
+            if self.grid[loc].get_type() == EntityType.EMPTY and Plant.spawn(
+                self.cfg.entities.plant_spawn_threshold
+            ):
                 self.update_grid(loc, Plant(self.cfg.entities.t_plant, loc, self.cfg))
 
     def simplify(self) -> List[List[int]]:
@@ -266,5 +295,9 @@ class Grid:
         """
         mapping = self.cfg.pretty_print
         return [
-            [mapping[self.grid[r, c].get_type().name.lower()] for c in range(self.num_cols)]
-            for r in range(self.num_rows)]
+            [
+                mapping[self.grid[r, c].get_type().name.lower()]
+                for c in range(self.num_cols)
+            ]
+            for r in range(self.num_rows)
+        ]

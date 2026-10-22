@@ -11,7 +11,10 @@ class MobileEntity(ABC, Entity):
     """
     Abstract mobile Entity class. Inherits from Entity
     """
-    def __init__(self, t: EntityType, lifespan: int, loc: Tuple[int, int], radius: int, cfg) -> None:
+
+    def __init__(
+        self, t: EntityType, lifespan: int, loc: Tuple[int, int], radius: int, cfg
+    ) -> None:
         """
         Initializes a mobile entity
 
@@ -25,7 +28,9 @@ class MobileEntity(ABC, Entity):
         super().__init__(t, lifespan, loc, cfg)
         self._radius = radius
 
-    def bfs(self, grid, target: EntityType, loc: Tuple[int, int]) -> List[Tuple[int, int]]:
+    def bfs(
+        self, grid, target: EntityType, loc: Tuple[int, int]
+    ) -> List[Tuple[int, int]]:
         """
         Breadth-first search (BFS) finding the shortest path to target within the sight radius
 
@@ -48,17 +53,31 @@ class MobileEntity(ABC, Entity):
         while queue:
             curr_row, curr_col = queue.popleft()
 
-            if grid.grid[curr_row, curr_col].get_type() == target and (curr_row, curr_col) != loc:
+            if (
+                grid.grid[curr_row, curr_col].get_type() == target
+                and (curr_row, curr_col) != loc
+            ):
                 target_cell = (curr_row, curr_col)
                 break
 
-            moves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+            moves = [
+                (-1, -1),
+                (-1, 0),
+                (-1, 1),
+                (0, -1),
+                (0, 1),
+                (1, -1),
+                (1, 0),
+                (1, 1),
+            ]
 
             for dr, dc in moves:
                 nr, nc = curr_row + dr, curr_col + dc
-                if (grid.is_valid_move(nr, nc, visited=visited)
-                        and grid.check_herbivores_repro(self, grid.grid[nr, nc])
-                        and grid.is_in_radius(loc, nr, nc, self._radius)):
+                if (
+                    grid.is_valid_move(nr, nc, visited=visited)
+                    and grid.check_herbivores_repro(self, grid.grid[nr, nc])
+                    and grid.is_in_radius(loc, nr, nc, self._radius)
+                ):
                     visited[nr][nc] = True
                     parent[(nr, nc)] = (curr_row, curr_col)
                     queue.append((nr, nc))

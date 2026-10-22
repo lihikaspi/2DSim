@@ -9,6 +9,7 @@ class Predator(MobileEntity):
     """
     Predator class. Inherits from MobileEntity
     """
+
     def __init__(self, lifespan: int, loc: Tuple[int, int], r: int, cfg) -> None:
         """
         Initializes the predator

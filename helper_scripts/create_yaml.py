@@ -12,19 +12,23 @@ class ENTITIES:
     R_PREDATOR_SIGHT = 5
     PLANT_SPAWN_THRESHOLD = 0.5
 
+
 class SIM:
-    BOARD_SIZE = (5,5)
+    BOARD_SIZE = (5, 5)
     TOTAL_STEPS = 5
 
+
 class PRETTY_PRINT:
-    EMPTY = '.'
-    TREE = '^'
-    PLANT = '*'
-    HERBIVORE = 'H'
-    PREDATOR = 'P'
+    EMPTY = "."
+    TREE = "^"
+    PLANT = "*"
+    HERBIVORE = "H"
+    PREDATOR = "P"
+
 
 class PATHS:
     NATURE_BOARDS_DIR = "../nature_boards/"
+
 
 def class_to_dict(cls):
     return {
@@ -46,14 +50,13 @@ def load_indexed_boards(boards_dir_path: str):
         for idx, file_path in enumerate(sorted(boards_dir.glob("*.txt"))):
             with open(file_path, encoding="utf-8") as f:
                 grid = [
-                    [int(token) for token in line.split()]
-                    for line in f
-                    if line.strip()
+                    [int(token) for token in line.split()] for line in f if line.strip()
                 ]
 
             boards[idx] = [file_path.stem, grid]
 
     return boards
+
 
 config_data = {
     "entities": class_to_dict(ENTITIES),
