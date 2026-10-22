@@ -65,7 +65,7 @@ class NatureGOLSimulation:
 
 def main():
     cfg = OmegaConf.load("config.yaml")
-    random.seed(cfg.seed)
+    random.seed(cfg.sim.seed)
 
     print("********* START GAME *********")
     print("choose initial grid:")

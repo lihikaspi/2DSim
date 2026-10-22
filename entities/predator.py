@@ -41,7 +41,7 @@ class Predator(MobileEntity):
         next_move = self.get_next_move(grid, predator=True)
         target_entity = grid.grid[next_move]
 
-        if target_entity.type != EntityType.PLANT:
+        if target_entity.type == EntityType.PLANT:
             target_entity.kill()
 
         if target_entity.type == EntityType.HERBIVORE:

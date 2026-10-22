@@ -67,7 +67,7 @@ class MobileEntity(ABC, Entity):
                 target_cell = (curr_row, curr_col)
                 break
 
-            for dr, dc in self.cfg.entitien.moves:
+            for dr, dc in self.cfg.entities.moves:
                 nr, nc = curr_row + dr, curr_col + dc
                 if (
                     grid.is_valid_move(nr, nc, visited=visited)
