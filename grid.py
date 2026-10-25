@@ -34,6 +34,8 @@ class Grid:
         self.grid = self.set_initial_grid(initial_grid)
 
         self.extinction = self.initialize_extinction_dict()
+        self.repro_count = {0 : 0}
+        self.animal_consumption_count = {0 : 0}
         logging.info(f"Initialized grid")
 
     @staticmethod
@@ -252,7 +254,7 @@ class Grid:
         logging.info(f"Found {len(type_cells)} {t} cells")
         return type_cells
 
-    def step_per_type(self, t: EntityType) -> None:
+    def step_per_type(self, t: EntityType, step_idx : int) -> None:
         """
         performs a step for all entities of a given type sequentially
 
@@ -272,9 +274,14 @@ class Grid:
                 if not e.is_still_alive():
                     logging.warning(f"Plant at location {e.loc.coords} is already dead")
                     self.update_grid(e.loc, EmptySpace(e.loc, self.cfg))
-            elif t == EntityType.HERBIVORE or t == EntityType.PREDATOR:
+            elif t == EntityType.HERBIVORE:
                 moved.add(id(e))
-                e.move(self)
+                did_repro = e.move(self)
+                self.repro_count[step_idx] += did_repro
+            elif t == EntityType.PREDATOR:
+                moved.add(id(e))
+                did_consumption = e.move(self)
+                self.animal_consumption_count[step_idx] = did_consumption
             elif t == EntityType.EMPTY or t == EntityType.TREE:
                 logging.error(f"Entity {t} is not moveable")
                 raise ValueError(f"Entity type {t} is not moveable")

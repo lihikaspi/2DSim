@@ -37,7 +37,7 @@ class Herbivore(MobileEntity):
         self.steps_since_repro = 0
         logging.info(f"Steps since reproduction was reset for Herbivore at location {self.loc.coords}")
 
-    def move(self, grid) -> None:
+    def move(self, grid) -> int:
         """
         moves the entity. Implements the abstract method from MobileEntity.
 
@@ -47,7 +47,7 @@ class Herbivore(MobileEntity):
         if not self.is_still_alive():
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
             logging.warning(f"Herbivore at location {self.loc.coords} is already dead")
-            return
+            return 0
 
         if self.steps_since_repro is not None:
             self.steps_since_repro += 1
@@ -61,7 +61,7 @@ class Herbivore(MobileEntity):
                     self.reset_steps_since_repro()
                     next_move_entity.reset_steps_since_repro()
             self.curr_step += 1
-            return
+            return 1
 
         if next_move_entity.type == EntityType.PLANT:
             self.refuel_age()
@@ -72,6 +72,7 @@ class Herbivore(MobileEntity):
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move
         grid.update_grid(next_move, self)
+        return 0
 
     @staticmethod
     def can_reproduce(steps_since: int, cooldown: int) -> bool:

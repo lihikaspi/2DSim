@@ -25,7 +25,7 @@ class Predator(MobileEntity):
         """
         super().__init__(EntityType.PREDATOR, lifespan, loc, r, cfg)
 
-    def move(self, grid) -> None:
+    def move(self, grid) -> int:
         """
         Move the predator. Implements the abstract method from MobileEntity
 
@@ -35,16 +35,18 @@ class Predator(MobileEntity):
         if not self.is_still_alive():
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
             logging.warning(f"Predator at location {self.loc.coords} is already dead")
-            return
+            return 0
 
         next_move = self.get_next_move(grid, predator=True)
         target_entity = grid.grid[next_move.coords]
+        consumption = False
 
         if target_entity.type == EntityType.PLANT:
             target_entity.kill()
 
         if target_entity.type == EntityType.HERBIVORE:
             self.refuel_age()
+            consumption = True
             logging.info(f"Predator at location {self.loc.coords} has eaten Herbivore at location {target_entity.loc.coords}")
         else:
             self.increase_age()
@@ -53,3 +55,4 @@ class Predator(MobileEntity):
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move
         grid.update_grid(next_move, self)
+        return 1 if consumption else 0

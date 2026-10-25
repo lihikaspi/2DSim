@@ -119,7 +119,7 @@ class MobileEntity(ABC, Entity):
         return path[1]
 
     @abstractmethod
-    def move(self, grid) -> None:
+    def move(self, grid) -> int:
         """
         Abstract method to move the entity
         Args:

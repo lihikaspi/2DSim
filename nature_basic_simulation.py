@@ -27,8 +27,8 @@ class NatureGOLSimulation:
         self.cfg = cfg
         self.initial_grid = cfg.boards[board_idx][1]
         self.grid = Grid(self.initial_grid, cfg)
-        self.states = []
         self.curr_step = 0
+        self.states = {self.curr_step: {"count_stats": self.get_stats()}}
         self.total_steps = cfg.sim.total_steps
         self.pretty_print(initial=True)
         logging.info(f"Initialized simulation")
@@ -41,9 +41,9 @@ class NatureGOLSimulation:
         """
         logging.info(f"Starting step: {self.curr_step}/{self.total_steps}...")
         self.curr_step += 1
-        self.grid.step_per_type(EntityType.PREDATOR)
-        self.grid.step_per_type(EntityType.HERBIVORE)
-        self.grid.step_per_type(EntityType.PLANT)
+        self.grid.step_per_type(EntityType.PREDATOR, self.curr_step)
+        self.grid.step_per_type(EntityType.HERBIVORE, self.curr_step)
+        self.grid.step_per_type(EntityType.PLANT, self.curr_step)
         self.grid.spawn_plants()
         self.pretty_print()
         logging.info(f"Finished step: {self.curr_step}/{self.total_steps}")
@@ -54,6 +54,9 @@ class NatureGOLSimulation:
         """
         while self.curr_step < self.total_steps:
             self.step()
+            self.states[self.curr_step].update({"count_stats": self.get_stats()})
+        self.states[self.curr_step].update({"repro_stats": self.grid.repro_count})
+        self.states[self.curr_step].update({"animal_consumption_stats": self.grid.animal_consumption_count})
 
     def pretty_print(self, initial: bool = False) -> None:
         """
@@ -62,15 +65,15 @@ class NatureGOLSimulation:
             initial (bool, optional): Whether the function os printing the initial state. Defaults to False.
         """
         simple_grid = self.grid.simplify()
-        self.states.append(simple_grid)
+        self.states[self.curr_step].update({"grid": simple_grid})
         header = (
-            "board at initial state" if initial else f"board at step {self.curr_step}"
+            "\nboard at initial state" if initial else f"board at step {self.curr_step}"
         )
         print(header)
         for row in simple_grid:
             print(" ".join(row))
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> Dict[EntityType, int]:
         return self.grid.get_entity_stats()
 
 
