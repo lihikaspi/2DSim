@@ -36,6 +36,8 @@ class Entity:
         Returns:
             true if still alive, false otherwise
         """
+        if self.lifespan == self.cfg.entities.never_dead:
+            return True
         return self.curr_step < self.lifespan
 
     def kill(self) -> None:

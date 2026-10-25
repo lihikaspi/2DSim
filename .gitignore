@@ -3,3 +3,4 @@
 .idea/
 config.yaml
 *.txt
+*.log
