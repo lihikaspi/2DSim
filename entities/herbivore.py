@@ -56,12 +56,14 @@ class Herbivore(MobileEntity):
         next_move_entity = grid.grid[next_move.coords]
 
         if next_move_entity.type == EntityType.HERBIVORE and next_move.coords != self.loc.coords:
+            did_reproduce = False
             if Herbivore.check_reproduction_possibility(self, next_move_entity):
                 if self.reproduction(grid, next_move):
                     self.reset_steps_since_repro()
                     next_move_entity.reset_steps_since_repro()
+                    did_reproduce = True
             self.curr_step += 1
-            return 1
+            return 1 if did_reproduce else 0
 
         if next_move_entity.type == EntityType.PLANT:
             self.refuel_age()

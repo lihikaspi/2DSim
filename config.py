@@ -34,6 +34,7 @@ class PrettyPrintConfig:
 @dataclass
 class PathsConfig:
     nature_boards_dir: str
+    sim_stats_dir: str
 
 
 @dataclass

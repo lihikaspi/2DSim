@@ -260,10 +260,13 @@ class Grid:
 
         Args:
             t (EntityType): type to perform step for
+            step_idx (int): index of the step for the counters
         """
-        if self.extinction[t]:
+        if self.extinction[str(t)]:
             return
         ents = self.get_all_type_cells(t, only_loc=False)
+        self.repro_count.setdefault(step_idx, 0)
+        self.animal_consumption_count.setdefault(step_idx, 0)
 
         moved = set()
         for e in ents:
@@ -281,7 +284,7 @@ class Grid:
             elif t == EntityType.PREDATOR:
                 moved.add(id(e))
                 did_consumption = e.move(self)
-                self.animal_consumption_count[step_idx] = did_consumption
+                self.animal_consumption_count[step_idx] += did_consumption
             elif t == EntityType.EMPTY or t == EntityType.TREE:
                 logging.error(f"Entity {t} is not moveable")
                 raise ValueError(f"Entity type {t} is not moveable")
@@ -293,7 +296,7 @@ class Grid:
         """
         Spawns plants at random empty locations. If no plants are still alive, not spawning
         """
-        if self.extinction[EntityType.PLANT]:
+        if self.extinction[str(EntityType.PLANT)]:
             return
         all_plants = self.get_all_type_cells(EntityType.PLANT)
         new_count = 0
@@ -323,7 +326,7 @@ class Grid:
             for r in range(self.num_rows)
         ]
 
-    def get_entity_stats(self) -> Dict[EntityType, int]:
+    def get_entity_stats(self) -> Dict[str, int]:
         """
         returns counts of all entities of each type
         """
@@ -332,10 +335,10 @@ class Grid:
         predators = len(self.get_all_type_cells(EntityType.PREDATOR))
         trees = len(self.get_all_type_cells(EntityType.TREE))
         emptys = len(self.get_all_type_cells(EntityType.EMPTY))
-        return {EntityType.PLANT: plants, EntityType.HERBIVORE: herbivores,
-                EntityType.PREDATOR: predators, EntityType.TREE: trees, EntityType.EMPTY: emptys}
+        return {str(EntityType.PLANT): plants, str(EntityType.HERBIVORE): herbivores,
+                str(EntityType.PREDATOR): predators, str(EntityType.TREE): trees, str(EntityType.EMPTY): emptys}
 
-    def initialize_extinction_dict(self) -> Dict[EntityType, bool]:
+    def initialize_extinction_dict(self) -> Dict[str, bool]:
         """
         initializes extinction dict for all entities
         """
@@ -348,8 +351,8 @@ class Grid:
         Args:
             t: entity type
         """
-        if not self.extinction[t] and len(self.get_all_type_cells(t)) == 0:
-            self.extinction[t] = True
+        if not self.extinction[str(t)] and len(self.get_all_type_cells(t)) == 0:
+            self.extinction[str(t)] = True
             logging.info(f'No more {t} entities are alive on the board')
             return True
         return False

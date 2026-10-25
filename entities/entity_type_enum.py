@@ -11,3 +11,6 @@ class EntityType(Enum):
     PLANT = 2
     HERBIVORE = 3
     PREDATOR = 4
+
+    def __str__(self):
+        return self.name.lower().capitalize()
