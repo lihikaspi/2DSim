@@ -218,7 +218,7 @@ class Grid:
             and self.is_valid_move(n.loc)
             and self.check_herbivores_repro(self.grid[loc.coords], n)
         ]
-        logging.info(f"Found {len(moves)} valid moves for entity at location {loc.coords}: {moves}")
+        logging.info(f"Found {len(moves)} valid moves for entity at location {loc.coords}: {[m.coords for m in moves]}")
         return moves
 
     def get_empty_neighbors(self, loc: Location) -> List[Location]:

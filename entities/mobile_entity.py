@@ -95,7 +95,7 @@ class MobileEntity(ABC, Entity):
         valid_moves = grid.get_valid_moves(self.loc)
         if not valid_moves:
             return self.loc
-        logging.info(f"Random valid move {valid_moves} for entity at location {self.loc.coords}")
+        logging.info(f"Random valid move {[m.coords for m in valid_moves]} for entity at location {self.loc.coords}")
         return random.choice(valid_moves)
 
     def get_next_move(self, grid, predator: bool = False) -> Location:
