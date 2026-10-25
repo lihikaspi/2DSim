@@ -32,6 +32,8 @@ class Grid:
         self.num_cols = len(initial_grid[0])
         self.num_cells = self.num_rows * self.num_cols
         self.grid = self.set_initial_grid(initial_grid)
+
+        self.extinction = self.initialize_extinction_dict()
         logging.info(f"Initialized grid")
 
     @staticmethod
@@ -257,10 +259,9 @@ class Grid:
         Args:
             t (EntityType): type to perform step for
         """
-        ents = self.get_all_type_cells(t, only_loc=False)
-        if len(ents) == 0:
-            logging.info(f"No more {t} entities are alive on the board")
+        if self.extinction[t]:
             return
+        ents = self.get_all_type_cells(t, only_loc=False)
 
         moved = set()
         for e in ents:
@@ -278,18 +279,20 @@ class Grid:
                 logging.error(f"Entity {t} is not moveable")
                 raise ValueError(f"Entity type {t} is not moveable")
 
+        for entity_type in (EntityType.PREDATOR, EntityType.HERBIVORE, EntityType.PLANT):
+            self.check_extinction(entity_type)
+
     def spawn_plants(self):
         """
         Spawns plants at random empty locations. If no plants are still alive, not spawning
         """
-        all_plants = self.get_all_type_cells(EntityType.PLANT)
-        if len(all_plants) == 0:
-            logging.info(f"All plants are dead!")
+        if self.extinction[EntityType.PLANT]:
             return
+        all_plants = self.get_all_type_cells(EntityType.PLANT)
         new_count = 0
         empty_cells = self.get_all_type_cells(EntityType.EMPTY)
-        for _ in range(random.randint(0, len(empty_cells))):
-            loc = random.choice(empty_cells)
+        new_locs = random.sample(empty_cells, random.randint(0, len(empty_cells)))
+        for loc in new_locs:
             if Plant.spawn(self.cfg.entities.plant_spawn_threshold):
                 new_count += 1
                 self.update_grid(loc, Plant(self.cfg.entities.t_plant, loc, self.cfg))
@@ -313,7 +316,7 @@ class Grid:
             for r in range(self.num_rows)
         ]
 
-    def get_entity_stats(self) -> Dict[str, int]:
+    def get_entity_stats(self) -> Dict[EntityType, int]:
         """
         returns counts of all entities of each type
         """
@@ -322,5 +325,24 @@ class Grid:
         predators = len(self.get_all_type_cells(EntityType.PREDATOR))
         trees = len(self.get_all_type_cells(EntityType.TREE))
         emptys = len(self.get_all_type_cells(EntityType.EMPTY))
-        return {'plants': plants, 'herbivores': herbivores, 'predators': predators, "trees": trees, "emptys": emptys}
+        return {EntityType.PLANT: plants, EntityType.HERBIVORE: herbivores,
+                EntityType.PREDATOR: predators, EntityType.TREE: trees, EntityType.EMPTY: emptys}
 
+    def initialize_extinction_dict(self) -> Dict[EntityType, bool]:
+        """
+        initializes extinction dict for all entities
+        """
+        stats = self.get_entity_stats()
+        return {k: (v==0) for k, v in stats.items()}
+
+    def check_extinction(self, t: EntityType) -> bool:
+        """
+        checks if an entity type has gone extinct and updates the extinction dict
+        Args:
+            t: entity type
+        """
+        if not self.extinction[t] and len(self.get_all_type_cells(t)) == 0:
+            self.extinction[t] = True
+            logging.info(f'No more {t} entities are alive on the board')
+            return True
+        return False

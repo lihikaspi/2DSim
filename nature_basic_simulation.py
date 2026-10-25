@@ -82,7 +82,7 @@ def load_config(yaml_path: str = "config.yaml") -> Config:
 
 
 def main():
-    logging.basicConfig(filename='NatureGOL.log', level=logging.WARNING)
+    logging.basicConfig(filename='NatureGOL.log', level=logging.INFO)
 
     cfg = load_config("./config.yaml")
     logging.info("Config file loaded")
