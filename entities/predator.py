@@ -1,11 +1,8 @@
-import logging
-logger = logging.getLogger(__name__)
-
 from config import Config
 from entities.entity import EmptySpace
 from entities.entity_type_enum import EntityType
-from entities.mobile_entity import MobileEntity
 from entities.location import Location
+from entities.mobile_entity import MobileEntity
 
 
 class Predator(MobileEntity):
@@ -34,7 +31,6 @@ class Predator(MobileEntity):
         """
         if not self.is_still_alive():
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
-            logging.warning(f"Predator at location {self.loc.coords} is already dead")
             return 0
 
         next_move = self.get_next_move(grid, predator=True)
@@ -47,11 +43,9 @@ class Predator(MobileEntity):
         if target_entity.type == EntityType.HERBIVORE:
             self.refuel_age()
             consumption = True
-            logging.info(f"Predator at location {self.loc.coords} has eaten Herbivore at location {target_entity.loc.coords}")
         else:
             self.increase_age()
 
-        logging.info(f"Predator moved from location {self.loc.coords} to {next_move.coords}")
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move
         grid.update_grid(next_move, self)

@@ -1,13 +1,10 @@
 import random
-from typing import Tuple
-import logging
-logger = logging.getLogger(__name__)
 
 from config import Config
 from entities.entity import EmptySpace
 from entities.entity_type_enum import EntityType
-from entities.mobile_entity import MobileEntity
 from entities.location import Location
+from entities.mobile_entity import MobileEntity
 
 
 class Herbivore(MobileEntity):
@@ -35,7 +32,6 @@ class Herbivore(MobileEntity):
         Resets the number of steps since reproduction
         """
         self.steps_since_repro = 0
-        logging.info(f"Steps since reproduction was reset for Herbivore at location {self.loc.coords}")
 
     def move(self, grid) -> int:
         """
@@ -46,7 +42,6 @@ class Herbivore(MobileEntity):
         """
         if not self.is_still_alive():
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
-            logging.warning(f"Herbivore at location {self.loc.coords} is already dead")
             return 0
 
         if self.steps_since_repro is not None:
@@ -55,7 +50,10 @@ class Herbivore(MobileEntity):
         next_move = self.get_next_move(grid, predator=False)
         next_move_entity = grid.grid[next_move.coords]
 
-        if next_move_entity.type == EntityType.HERBIVORE and next_move.coords != self.loc.coords:
+        if (
+            next_move_entity.type == EntityType.HERBIVORE
+            and next_move.coords != self.loc.coords
+        ):
             did_reproduce = False
             if Herbivore.check_reproduction_possibility(self, next_move_entity):
                 if self.reproduction(grid, next_move):
@@ -70,7 +68,6 @@ class Herbivore(MobileEntity):
         else:
             self.increase_age()
 
-        logging.info(f"Herbivore moved from location {self.loc.coords} to {next_move.coords}")
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move
         grid.update_grid(next_move, self)
@@ -117,7 +114,6 @@ class Herbivore(MobileEntity):
         """
         neighbors = grid.get_empty_neighbors(partner_loc)
         if not neighbors:
-            logging.warning(f"No empty neighbors found for herbivore location {partner_loc.coords}, can't reproduce!")
             return False
         repro_loc = random.choice(neighbors)
         grid.update_grid(
@@ -126,6 +122,4 @@ class Herbivore(MobileEntity):
                 self.lifespan, repro_loc, self._radius, self.t_cooldown, self.cfg
             ),
         )
-        logging.info(f"Herbivore at location {self.loc.coords} and Herbivore at location {repro_loc.coords} reproduced")
-        logging.info(f"A new Herbivore was reproduced at location {repro_loc.coords}")
         return True
