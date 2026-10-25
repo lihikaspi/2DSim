@@ -1,8 +1,9 @@
 import random
-from typing import List, Tuple
+from typing import List, Tuple, Dict
+import logging
+logger = logging.getLogger(__name__)
 
 import numpy as np
-from omegaconf import DictConfig, ListConfig
 
 from config import Config
 from entities.entity import EmptySpace, Entity, Plant, Tree
@@ -29,7 +30,9 @@ class Grid:
         self.cfg = cfg
         self.num_rows = len(initial_grid)
         self.num_cols = len(initial_grid[0])
+        self.num_cells = self.num_rows * self.num_cols
         self.grid = self.set_initial_grid(initial_grid)
+        logging.info(f"Initialized grid")
 
     @staticmethod
     def get_new_entity(val: int, loc: Location, cfg) -> Entity:
@@ -47,6 +50,7 @@ class Grid:
         try:
             ent = EntityType(val)
         except ValueError:
+            logging.error(f"Unknown entity type: {val}")
             raise ValueError(f"Unknown entity type value: {val}")
 
         e_cfg = cfg.entities
@@ -62,6 +66,7 @@ class Grid:
 
         builder = builders.get(ent)
         if not builder:
+            logging.error(f"No constructor registered for: {ent}")
             raise ValueError(f"No constructor registered for: {ent}")
         return builder()
 
@@ -76,12 +81,14 @@ class Grid:
             new grid with Entity objects as values
 
         """
+        logging.info(f"Converting initial grid into a Grid object...")
         grid = np.ndarray(shape=(self.num_rows, self.num_cols), dtype=Entity)
         for row in range(self.num_rows):
             for col in range(self.num_cols):
                 grid[row, col] = self.get_new_entity(
                     initial_grid[row][col], Location(row, col), self.cfg
                 )
+        logging.info(f"Initial grid created in size: {grid.shape}")
         return grid
 
     def is_in_grid(self, loc: Location) -> bool:
@@ -106,6 +113,7 @@ class Grid:
             new_ent (Entity): new entity
         """
         self.grid[loc.coords] = new_ent
+        logging.info(f"grid at location {loc.coords} updated with entity {new_ent.type}")
 
     def get_radius_coords(self, loc: Location, radius: int) -> Tuple[int, int, int, int]:
         """
@@ -208,6 +216,7 @@ class Grid:
             and self.is_valid_move(n.loc)
             and self.check_herbivores_repro(self.grid[loc.coords], n)
         ]
+        logging.info(f"Found {len(moves)} valid moves for entity at location {loc.coords}: {moves}")
         return moves
 
     def get_empty_neighbors(self, loc: Location) -> List[Location]:
@@ -222,6 +231,7 @@ class Grid:
         """
         neighbors = self.get_truncated_grid(loc, 1).flatten()
         empty_neighbors = [n.loc for n in neighbors if n.type == EntityType.EMPTY]
+        logging.info(f"Found {len(empty_neighbors)} empty cells for entity at location {loc.coords}: {empty_neighbors}")
         return empty_neighbors
 
     def get_all_type_cells(self, t: EntityType, only_loc: bool = True) -> List[Location] | List[Entity]:
@@ -236,7 +246,8 @@ class Grid:
             list of all type cells, containing either locations or entities
         """
         all_cells = self.grid.flatten()
-        type_cells = [c.loc if only_loc else c for c in all_cells if c.type == t]
+        type_cells = [c.loc if only_loc else c for c in all_cells if c.type == t and c.is_still_alive()]
+        logging.info(f"Found {len(type_cells)} {t} cells")
         return type_cells
 
     def step_per_type(self, t: EntityType) -> None:
@@ -247,6 +258,10 @@ class Grid:
             t (EntityType): type to perform step for
         """
         ents = self.get_all_type_cells(t, only_loc=False)
+        if len(ents) == 0:
+            logging.info(f"No more {t} entities are alive on the board")
+            return
+
         moved = set()
         for e in ents:
             if id(e) in moved or self.grid[e.loc.coords] is not e:
@@ -254,26 +269,33 @@ class Grid:
             if t == EntityType.PLANT:
                 e.increase_age()
                 if not e.is_still_alive():
+                    logging.warning(f"Plant at location {e.loc.coords} is already dead")
                     self.update_grid(e.loc, EmptySpace(e.loc, self.cfg))
             elif t == EntityType.HERBIVORE or t == EntityType.PREDATOR:
                 moved.add(id(e))
                 e.move(self)
             elif t == EntityType.EMPTY or t == EntityType.TREE:
+                logging.error(f"Entity {t} is not moveable")
                 raise ValueError(f"Entity type {t} is not moveable")
 
     def spawn_plants(self):
         """
         Spawns plants at random empty locations. If no plants are still alive, not spawning
         """
-        if len(self.get_all_type_cells(EntityType.PLANT)) == 0:
+        all_plants = self.get_all_type_cells(EntityType.PLANT)
+        if len(all_plants) == 0:
+            logging.info(f"All plants are dead!")
             return
+        new_count = 0
         empty_cells = self.get_all_type_cells(EntityType.EMPTY)
         for _ in range(random.randint(0, len(empty_cells))):
             loc = random.choice(empty_cells)
-            if self.grid[loc.coords].type == EntityType.EMPTY and Plant.spawn(
-                    self.cfg.entities.plant_spawn_threshold
-            ):
+            if Plant.spawn(self.cfg.entities.plant_spawn_threshold):
+                new_count += 1
                 self.update_grid(loc, Plant(self.cfg.entities.t_plant, loc, self.cfg))
+        logging.info(f"Spawned {new_count} plants")
+        if len(all_plants)+new_count > self.num_cells*0.9:
+            logging.info(f"Plants have exceeded over 90% of the board")
 
     def simplify(self) -> List[List[str]]:
         """
@@ -290,3 +312,15 @@ class Grid:
             ]
             for r in range(self.num_rows)
         ]
+
+    def get_entity_stats(self) -> Dict[str, int]:
+        """
+        returns counts of all entities of each type
+        """
+        plants = len(self.get_all_type_cells(EntityType.PLANT))
+        herbivores = len(self.get_all_type_cells(EntityType.HERBIVORE))
+        predators = len(self.get_all_type_cells(EntityType.PREDATOR))
+        trees = len(self.get_all_type_cells(EntityType.TREE))
+        emptys = len(self.get_all_type_cells(EntityType.EMPTY))
+        return {'plants': plants, 'herbivores': herbivores, 'predators': predators, "trees": trees, "emptys": emptys}
+

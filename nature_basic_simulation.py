@@ -1,6 +1,8 @@
 import random
 from pathlib import Path
-from typing import cast
+from typing import cast, Dict
+import logging
+logger = logging.getLogger(__name__)
 
 from omegaconf import OmegaConf
 
@@ -29,6 +31,7 @@ class NatureGOLSimulation:
         self.curr_step = 0
         self.total_steps = cfg.sim.total_steps
         self.pretty_print(initial=True)
+        logging.info(f"Initialized simulation")
 
     def step(self) -> None:
         """
@@ -36,12 +39,14 @@ class NatureGOLSimulation:
 
         move order: PREDATOR -> HERBIVORE -> PLANT -> SPAWN NEW PLANTS
         """
+        logging.info(f"Starting step: {self.curr_step}/{self.total_steps}...")
         self.curr_step += 1
         self.grid.step_per_type(EntityType.PREDATOR)
         self.grid.step_per_type(EntityType.HERBIVORE)
         self.grid.step_per_type(EntityType.PLANT)
         self.grid.spawn_plants()
         self.pretty_print()
+        logging.info(f"Finished step: {self.curr_step}/{self.total_steps}")
 
     def run_simulation(self) -> None:
         """
@@ -65,6 +70,10 @@ class NatureGOLSimulation:
         for row in simple_grid:
             print(" ".join(row))
 
+    def get_stats(self) -> Dict[str, int]:
+        return self.grid.get_entity_stats()
+
+
 def load_config(yaml_path: str = "config.yaml") -> Config:
     schema = OmegaConf.structured(Config)
     yaml_conf = OmegaConf.load(yaml_path)
@@ -73,16 +82,23 @@ def load_config(yaml_path: str = "config.yaml") -> Config:
 
 
 def main():
+    logging.basicConfig(filename='NatureGOL.log', level=logging.WARNING)
+
     cfg = load_config("./config.yaml")
+    logging.info("Config file loaded")
     random.seed(cfg.sim.seed)
 
     print("********* START GAME *********")
+    logging.info("Starting game...")
     print("choose initial grid:")
     initial_idx = int(input().strip())
     print(f"board chosen: {cfg.boards[initial_idx][0]}")
+    logging.info(f"Initial grid: {cfg.boards[initial_idx][0]}")
     sim = NatureGOLSimulation(cfg, initial_idx)
+    logging.info(f"Initial grid entity stats: {sim.get_stats()}")
     sim.run_simulation()
     print("********* END GAME *********")
+    logging.info("Finished game")
 
 
 if __name__ == "__main__":

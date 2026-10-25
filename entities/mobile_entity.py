@@ -1,9 +1,9 @@
 import random
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import List, Tuple
-
-from omegaconf import DictConfig, ListConfig
+from typing import List
+import logging
+logger = logging.getLogger(__name__)
 
 from config import Config
 from entities.entity import Entity
@@ -95,6 +95,7 @@ class MobileEntity(ABC, Entity):
         valid_moves = grid.get_valid_moves(self.loc)
         if not valid_moves:
             return self.loc
+        logging.info(f"Random valid move {valid_moves} for entity at location {self.loc.coords}")
         return random.choice(valid_moves)
 
     def get_next_move(self, grid, predator: bool = False) -> Location:
@@ -113,6 +114,7 @@ class MobileEntity(ABC, Entity):
         target = EntityType.HERBIVORE if predator else EntityType.PLANT
         path = self.bfs(grid, target, self.loc)
         if len(path) <= 1:
+            logging.info(f"No {EntityType.HERBIVORE if predator else EntityType.PLANT} in sight radius {self._radius} for entity at location: {self.loc.coords}")
             return self.get_random_valid_move(grid)
         return path[1]
 

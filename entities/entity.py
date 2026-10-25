@@ -1,7 +1,6 @@
 import random
-from typing import Tuple
-
-from omegaconf import DictConfig, ListConfig
+import logging
+logger = logging.getLogger(__name__)
 
 from config import Config
 from entities.entity_type_enum import EntityType
@@ -29,6 +28,8 @@ class Entity:
         self.curr_step = 0
         self.loc = loc
 
+        logging.info(f"New entity {self.type} created at location {loc.coords}")
+
     def is_still_alive(self) -> bool:
         """
         Checks if the entity is still alive (hasn't reached the lifespan)
@@ -42,15 +43,18 @@ class Entity:
         kills the entity
         """
         if self.lifespan == self.cfg.entities.never_dead:
-            raise ValueError("This entity does not have an age")
+            logging.error(f"Entity {self.type} does not have an age")
+            raise ValueError(f"Entity {self.type} does not have an age")
         self.curr_step = self.lifespan
+        logging.info(f"Entity {self.type} at location {self.loc.coords} is dead!")
 
     def increase_age(self) -> None:
         """
         Increases the age of the entity
         """
         if self.lifespan == self.cfg.entities.never_dead:
-            raise ValueError("This entity does not have an age")
+            logging.error(f"Entity {self.type} does not have an age")
+            raise ValueError(f"Entity {self.type} does not have an age")
         self.curr_step += 1
 
     def refuel_age(self) -> None:
@@ -58,7 +62,9 @@ class Entity:
         resets the age of the entity
         """
         if self.lifespan == self.cfg.entities.never_dead:
-            raise ValueError("This entity does not have an age")
+            logging.error(f"Entity {self.type} does not have an age")
+            raise ValueError(f"Entity {self.type} does not have an age")
+        logging.info(f"life of entity {self.type} at location {self.loc.coords} has been refueled!")
         self.curr_step = 0
 
 class EmptySpace(Entity):
