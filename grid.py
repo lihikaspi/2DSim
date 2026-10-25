@@ -274,7 +274,7 @@ class Grid:
             if id(e) in moved or self.grid[e.loc.coords] is not e:
                 continue
             if t == EntityType.PLANT:
-                e.increase_age()
+                e.update_age(update_type="u")
                 if not e.is_still_alive():
                     self.update_grid(e.loc, EmptySpace(e.loc, self.cfg))
             elif t == EntityType.HERBIVORE:

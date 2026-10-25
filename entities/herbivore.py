@@ -64,9 +64,9 @@ class Herbivore(MobileEntity):
             return 1 if did_reproduce else 0
 
         if next_move_entity.type == EntityType.PLANT:
-            self.refuel_age()
+            self.update_age(update_type="r")
         else:
-            self.increase_age()
+            self.update_age(update_type="u")
 
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move

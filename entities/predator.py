@@ -38,13 +38,13 @@ class Predator(MobileEntity):
         consumption = False
 
         if target_entity.type == EntityType.PLANT:
-            target_entity.kill()
+            target_entity.update_age(update_type="k")
 
         if target_entity.type == EntityType.HERBIVORE:
-            self.refuel_age()
+            self.update_age(update_type="r")
             consumption = True
         else:
-            self.increase_age()
+            self.update_age(update_type="u")
 
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move
