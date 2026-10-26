@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
+from alerts.alert_manager import AlertManager
 from config import Config
 from entities.entity import EmptySpace, Entity, Plant, Tree
 from entities.entity_type_enum import EntityType
@@ -16,7 +17,7 @@ class Grid:
     Grid object class. Handles all grid updates and checks
     """
 
-    def __init__(self, initial_grid: List[List[int]], cfg: Config) -> None:
+    def __init__(self, initial_grid: List[List[int]], cfg: Config, alert_manager: AlertManager) -> None:
         """
         Initializes the grid using the given initial grid
 
@@ -33,6 +34,8 @@ class Grid:
         self.extinction = self.initialize_extinction_dict()
         self.repro_count = {0: 0}
         self.animal_consumption_count = {0: 0}
+
+        self.alert_manager = alert_manager
 
     @staticmethod
     def get_new_entity(val: int, loc: Location, cfg) -> Entity:

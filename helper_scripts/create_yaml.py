@@ -22,6 +22,7 @@ class ENTITIES:
         [1, 1],
     ]
     NEVER_DEAD = -1
+    PLANT_POPULATION_THRESHOLD = 0.9
 
 
 class SIM:
