@@ -1,9 +1,7 @@
 import random
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import List, Tuple
-
-from omegaconf import DictConfig, ListConfig
+from typing import List
 
 from config import Config
 from entities.entity import Entity
@@ -117,7 +115,7 @@ class MobileEntity(ABC, Entity):
         return path[1]
 
     @abstractmethod
-    def move(self, grid) -> None:
+    def move(self, grid) -> int:
         """
         Abstract method to move the entity
         Args:

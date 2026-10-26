@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Any
+from typing import Any, Dict, List, Tuple
 
 
 @dataclass
@@ -34,6 +34,7 @@ class PrettyPrintConfig:
 @dataclass
 class PathsConfig:
     nature_boards_dir: str
+    sim_stats_dir: str
 
 
 @dataclass

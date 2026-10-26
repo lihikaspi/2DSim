@@ -1,7 +1,4 @@
 import random
-from typing import Tuple
-
-from omegaconf import DictConfig, ListConfig
 
 from config import Config
 from entities.entity_type_enum import EntityType
@@ -13,7 +10,9 @@ class Entity:
     Entity class
     """
 
-    def __init__(self, t: EntityType, lifespan: int, loc: Location, cfg: Config) -> None:
+    def __init__(
+        self, t: EntityType, lifespan: int, loc: Location, cfg: Config
+    ) -> None:
         """
         Initializes the new entity
 
@@ -35,31 +34,27 @@ class Entity:
         Returns:
             true if still alive, false otherwise
         """
+        if self.lifespan == self.cfg.entities.never_dead:
+            return True
         return self.curr_step < self.lifespan
 
-    def kill(self) -> None:
+    def update_age(self, update_type: str = "u") -> None:
         """
-        kills the entity
+        Updates the age of the entity
+        Args:
+            update_type (str): only accepts "u" (increase), "k" (kill) or "r" (refuel)
         """
+        if update_type not in ["u", "k", "r"]:
+            raise ValueError(f"Invalid update type: {update_type}")
         if self.lifespan == self.cfg.entities.never_dead:
-            raise ValueError("This entity does not have an age")
-        self.curr_step = self.lifespan
+            raise ValueError(f"Entity {self.type} does not have an age")
 
-    def increase_age(self) -> None:
-        """
-        Increases the age of the entity
-        """
-        if self.lifespan == self.cfg.entities.never_dead:
-            raise ValueError("This entity does not have an age")
-        self.curr_step += 1
-
-    def refuel_age(self) -> None:
-        """
-        resets the age of the entity
-        """
-        if self.lifespan == self.cfg.entities.never_dead:
-            raise ValueError("This entity does not have an age")
-        self.curr_step = 0
+        if update_type == "u":
+            self.curr_step += 1
+        elif update_type == "k":
+            self.curr_step = self.lifespan
+        elif update_type == "r":
+            self.curr_step = 0
 
 class EmptySpace(Entity):
     """

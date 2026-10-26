@@ -1,13 +1,10 @@
 import random
-from typing import Tuple
-
-from omegaconf import DictConfig, ListConfig
 
 from config import Config
 from entities.entity import EmptySpace
 from entities.entity_type_enum import EntityType
-from entities.mobile_entity import MobileEntity
 from entities.location import Location
+from entities.mobile_entity import MobileEntity
 
 
 class Herbivore(MobileEntity):
@@ -36,7 +33,7 @@ class Herbivore(MobileEntity):
         """
         self.steps_since_repro = 0
 
-    def move(self, grid) -> None:
+    def move(self, grid) -> int:
         """
         moves the entity. Implements the abstract method from MobileEntity.
 
@@ -45,7 +42,7 @@ class Herbivore(MobileEntity):
         """
         if not self.is_still_alive():
             grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
-            return
+            return 0
 
         if self.steps_since_repro is not None:
             self.steps_since_repro += 1
@@ -53,22 +50,28 @@ class Herbivore(MobileEntity):
         next_move = self.get_next_move(grid, predator=False)
         next_move_entity = grid.grid[next_move.coords]
 
-        if next_move_entity.type == EntityType.HERBIVORE and next_move.coords != self.loc.coords:
+        if (
+            next_move_entity.type == EntityType.HERBIVORE
+            and next_move.coords != self.loc.coords
+        ):
+            did_reproduce = False
             if Herbivore.check_reproduction_possibility(self, next_move_entity):
                 if self.reproduction(grid, next_move):
                     self.reset_steps_since_repro()
                     next_move_entity.reset_steps_since_repro()
+                    did_reproduce = True
             self.curr_step += 1
-            return
+            return 1 if did_reproduce else 0
 
         if next_move_entity.type == EntityType.PLANT:
-            self.refuel_age()
+            self.update_age(update_type="r")
         else:
-            self.increase_age()
+            self.update_age(update_type="u")
 
         grid.update_grid(self.loc, EmptySpace(self.loc, self.cfg))
         self.loc = next_move
         grid.update_grid(next_move, self)
+        return 0
 
     @staticmethod
     def can_reproduce(steps_since: int, cooldown: int) -> bool:

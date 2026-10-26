@@ -40,6 +40,7 @@ class PRETTY_PRINT:
 
 class PATHS:
     NATURE_BOARDS_DIR = "../nature_boards/"
+    SIM_STATS_DIR = "./sim_stats/"
 
 
 def class_to_dict(cls):

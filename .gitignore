@@ -3,3 +3,8 @@
 .idea/
 config.yaml
 *.txt
+*.log
+sim_stats/
+nature_boards/
+seed_templates/
+basic_animations/

@@ -1,15 +1,14 @@
 import random
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
-from omegaconf import DictConfig, ListConfig
 
 from config import Config
 from entities.entity import EmptySpace, Entity, Plant, Tree
 from entities.entity_type_enum import EntityType
 from entities.herbivore import Herbivore
-from entities.predator import Predator
 from entities.location import Location
+from entities.predator import Predator
 
 
 class Grid:
@@ -17,8 +16,7 @@ class Grid:
     Grid object class. Handles all grid updates and checks
     """
 
-    def __init__(
-        self, initial_grid: List[List[int]], cfg: Config) -> None:
+    def __init__(self, initial_grid: List[List[int]], cfg: Config) -> None:
         """
         Initializes the grid using the given initial grid
 
@@ -29,7 +27,12 @@ class Grid:
         self.cfg = cfg
         self.num_rows = len(initial_grid)
         self.num_cols = len(initial_grid[0])
+        self.num_cells = self.num_rows * self.num_cols
         self.grid = self.set_initial_grid(initial_grid)
+
+        self.extinction = self.initialize_extinction_dict()
+        self.repro_count = {0: 0}
+        self.animal_consumption_count = {0: 0}
 
     @staticmethod
     def get_new_entity(val: int, loc: Location, cfg) -> Entity:
@@ -55,9 +58,11 @@ class Grid:
             EntityType.TREE: lambda: Tree(loc, cfg),
             EntityType.PLANT: lambda: Plant(e_cfg.t_plant, loc, cfg),
             EntityType.HERBIVORE: lambda: Herbivore(
-                e_cfg.t_herbivore, loc, e_cfg.r_herbivore_sight, e_cfg.t_cooldown, cfg),
+                e_cfg.t_herbivore, loc, e_cfg.r_herbivore_sight, e_cfg.t_cooldown, cfg
+            ),
             EntityType.PREDATOR: lambda: Predator(
-                e_cfg.t_predator, loc, e_cfg.r_predator_sight, cfg),
+                e_cfg.t_predator, loc, e_cfg.r_predator_sight, cfg
+            ),
         }
 
         builder = builders.get(ent)
@@ -95,7 +100,12 @@ class Grid:
             true if position is within the grid, false otherwise
 
         """
-        return not (loc.row >= self.num_rows or loc.row < 0 or loc.col >= self.num_cols or loc.col < 0)
+        return not (
+            loc.row >= self.num_rows
+            or loc.row < 0
+            or loc.col >= self.num_cols
+            or loc.col < 0
+        )
 
     def update_grid(self, loc: Location, new_ent: Entity) -> None:
         """
@@ -107,7 +117,9 @@ class Grid:
         """
         self.grid[loc.coords] = new_ent
 
-    def get_radius_coords(self, loc: Location, radius: int) -> Tuple[int, int, int, int]:
+    def get_radius_coords(
+        self, loc: Location, radius: int
+    ) -> Tuple[int, int, int, int]:
         """
         Calculates the starting and ending indexes of the rows and columns from the main grid to include only cells
         within a given radius of the given location
@@ -236,43 +248,65 @@ class Grid:
             list of all type cells, containing either locations or entities
         """
         all_cells = self.grid.flatten()
-        type_cells = [c.loc if only_loc else c for c in all_cells if c.type == t]
+        type_cells = [
+            c.loc if only_loc else c
+            for c in all_cells
+            if c.type == t and c.is_still_alive()
+        ]
         return type_cells
 
-    def step_per_type(self, t: EntityType) -> None:
+    def step_per_type(self, t: EntityType, step_idx: int) -> None:
         """
         performs a step for all entities of a given type sequentially
 
         Args:
             t (EntityType): type to perform step for
+            step_idx (int): index of the step for the counters
         """
+        if self.extinction[str(t)]:
+            return
         ents = self.get_all_type_cells(t, only_loc=False)
+        self.repro_count.setdefault(step_idx, 0)
+        self.animal_consumption_count.setdefault(step_idx, 0)
+
         moved = set()
         for e in ents:
             if id(e) in moved or self.grid[e.loc.coords] is not e:
                 continue
             if t == EntityType.PLANT:
-                e.increase_age()
+                e.update_age(update_type="u")
                 if not e.is_still_alive():
                     self.update_grid(e.loc, EmptySpace(e.loc, self.cfg))
-            elif t == EntityType.HERBIVORE or t == EntityType.PREDATOR:
+            elif t == EntityType.HERBIVORE:
                 moved.add(id(e))
-                e.move(self)
+                did_repro = e.move(self)
+                self.repro_count[step_idx] += did_repro
+            elif t == EntityType.PREDATOR:
+                moved.add(id(e))
+                did_consumption = e.move(self)
+                self.animal_consumption_count[step_idx] += did_consumption
             elif t == EntityType.EMPTY or t == EntityType.TREE:
                 raise ValueError(f"Entity type {t} is not moveable")
+
+        for entity_type in (
+            EntityType.PREDATOR,
+            EntityType.HERBIVORE,
+            EntityType.PLANT,
+        ):
+            self.check_extinction(entity_type)
 
     def spawn_plants(self):
         """
         Spawns plants at random empty locations. If no plants are still alive, not spawning
         """
-        if len(self.get_all_type_cells(EntityType.PLANT)) == 0:
+        if self.extinction[str(EntityType.PLANT)]:
             return
+        new_count = 0
         empty_cells = self.get_all_type_cells(EntityType.EMPTY)
-        for _ in range(random.randint(0, len(empty_cells))):
-            loc = random.choice(empty_cells)
-            if self.grid[loc.coords].type == EntityType.EMPTY and Plant.spawn(
-                    self.cfg.entities.plant_spawn_threshold
-            ):
+        new_locs = random.sample(empty_cells, random.randint(0, len(empty_cells)))
+        for loc in new_locs:
+            if Plant.spawn(self.cfg.entities.plant_spawn_threshold):
+                new_count += 1
                 self.update_grid(loc, Plant(self.cfg.entities.t_plant, loc, self.cfg))
 
     def simplify(self) -> List[List[str]]:
@@ -290,3 +324,38 @@ class Grid:
             ]
             for r in range(self.num_rows)
         ]
+
+    def get_entity_stats(self) -> Dict[str, int]:
+        """
+        returns counts of all entities of each type
+        """
+        plants = len(self.get_all_type_cells(EntityType.PLANT))
+        herbivores = len(self.get_all_type_cells(EntityType.HERBIVORE))
+        predators = len(self.get_all_type_cells(EntityType.PREDATOR))
+        trees = len(self.get_all_type_cells(EntityType.TREE))
+        emptys = len(self.get_all_type_cells(EntityType.EMPTY))
+        return {
+            str(EntityType.PLANT): plants,
+            str(EntityType.HERBIVORE): herbivores,
+            str(EntityType.PREDATOR): predators,
+            str(EntityType.TREE): trees,
+            str(EntityType.EMPTY): emptys,
+        }
+
+    def initialize_extinction_dict(self) -> Dict[str, bool]:
+        """
+        initializes extinction dict for all entities
+        """
+        stats = self.get_entity_stats()
+        return {k: (v == 0) for k, v in stats.items()}
+
+    def check_extinction(self, t: EntityType) -> bool:
+        """
+        checks if an entity type has gone extinct and updates the extinction dict
+        Args:
+            t: entity type
+        """
+        if not self.extinction[str(t)] and len(self.get_all_type_cells(t)) == 0:
+            self.extinction[str(t)] = True
+            return True
+        return False
