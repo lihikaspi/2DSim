@@ -144,20 +144,19 @@ def main():
         json.dump(stats, f)
     print("********* END GAME *********")
 
-    # TODO change df load logic - load only desired columns
-    states_df = pd.DataFrame({col: pd.Series(steps) for col, steps in stats.items()})
-    states_df.index = states_df.index.astype(int)
-    states_df = states_df.sort_index()
-    live_stats_df = pd.DataFrame(states_df["live_stats"].tolist(), index=states_df.index)
+    stats_df = pd.DataFrame(stats, columns=["repro_stats", "animal_consumption_stats"])
+    stats_df.index = stats_df.index.astype(int)
+    stats_df = stats_df.sort_index()
+    live_stats_df = pd.DataFrame.from_dict(stats["live_stats"], orient="index")
 
     print("simulation data df info:")
-    states_df.info()
+    stats_df.info()
     print("simulation data stats:")
-    print(states_df.describe())
+    print(stats_df.describe())
 
     plot_live_organisms(live_stats_df[["Plant", "Herbivore", "Predator"]], cfg.boards[initial_idx][0], cfg.paths.sim_stats_dir)
-    plot_herbivore_repro(states_df["repro_stats"].dropna(), cfg.boards[initial_idx][0], cfg.paths.sim_stats_dir)
-    plot_timeline(states_df, cfg.boards[initial_idx][0], cfg.paths.sim_stats_dir)
+    plot_herbivore_repro(stats_df["repro_stats"].dropna(), cfg.boards[initial_idx][0], cfg.paths.sim_stats_dir)
+    plot_timeline(stats_df, cfg.boards[initial_idx][0], cfg.paths.sim_stats_dir)
 
 if __name__ == "__main__":
     main()
