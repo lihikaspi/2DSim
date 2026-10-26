@@ -2,13 +2,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Dict, List
 import logging
+import sys
 
 from alerts.alert_type_enum import AlertType
 from entities.entity_type_enum import EntityType
 
 logger = logging.getLogger("SimulationAlerts")
 if not logger.handlers:
-    handler = logging.StreamHandler()
+    handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
@@ -54,6 +55,11 @@ class PredatorAteHerbivoreAlert(AlertObserver):
 class ExtinctionAlert(AlertObserver):
     def __init__(self) -> None:
         self._tracked_types = set()
+        self._monitored_species = {
+            str(EntityType.PLANT),
+            str(EntityType.HERBIVORE),
+            str(EntityType.PREDATOR),
+        }
 
     def update(self, event: SimulationEvent) -> None:
         if event.event_type != AlertType.STEP_END:
@@ -62,16 +68,16 @@ class ExtinctionAlert(AlertObserver):
         counts: Dict[str, int] = event.data.get("counts", {})
         step: int = event.data.get("step", 0)
 
-        for entity_type, count in counts.items():
-            if count > 0:
-                self._tracked_types.add(entity_type)
+        for entity_name in self._monitored_species:
+            if counts.get(entity_name, 0) > 0:
+                self._tracked_types.add(entity_name)
 
-        for entity_type in list(self._tracked_types):
-            if counts.get(entity_type, 0) == 0:
+        for entity_name in list(self._tracked_types):
+            if counts.get(entity_name, 0) == 0:
                 logger.warning(
-                    f"ALERT: Extinction! No more entities of type '{entity_type}' are alive at step {step}."
+                    f"ALERT: Extinction! No more entities of type '{entity_name}' are alive at step {step}."
                 )
-                self._tracked_types.remove(entity_type)
+                self._tracked_types.remove(entity_name)
 
 
 class PlantOverpopulationAlert(AlertObserver):
