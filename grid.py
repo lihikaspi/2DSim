@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
+from alerts.alert_manager import AlertManager
 from config import Config
 from entities.entity import EmptySpace, Entity, Plant, Tree
 from entities.entity_type_enum import EntityType
@@ -16,7 +17,7 @@ class Grid:
     Grid object class. Handles all grid updates and checks
     """
 
-    def __init__(self, initial_grid: List[List[int]], cfg: Config) -> None:
+    def __init__(self, initial_grid: List[List[int]], cfg: Config, alert_manager: AlertManager) -> None:
         """
         Initializes the grid using the given initial grid
 
@@ -33,6 +34,8 @@ class Grid:
         self.extinction = self.initialize_extinction_dict()
         self.repro_count = {0: 0}
         self.animal_consumption_count = {0: 0}
+
+        self.alert_manager = alert_manager
 
     @staticmethod
     def get_new_entity(val: int, loc: Location, cfg) -> Entity:
@@ -265,6 +268,7 @@ class Grid:
         """
         if self.extinction[str(t)]:
             return
+
         ents = self.get_all_type_cells(t, only_loc=False)
         self.repro_count.setdefault(step_idx, 0)
         self.animal_consumption_count.setdefault(step_idx, 0)
@@ -273,6 +277,11 @@ class Grid:
         for e in ents:
             if id(e) in moved or self.grid[e.loc.coords] is not e:
                 continue
+
+            if not e.is_still_alive():
+                self.update_grid(e.loc, EmptySpace(e.loc, self.cfg))
+                continue
+
             if t == EntityType.PLANT:
                 e.update_age(update_type="u")
                 if not e.is_still_alive():
@@ -357,5 +366,10 @@ class Grid:
         """
         if not self.extinction[str(t)] and len(self.get_all_type_cells(t)) == 0:
             self.extinction[str(t)] = True
+
+            for r in range(self.num_rows):
+                for c in range(self.num_cols):
+                    if self.grid[r, c].type == t:
+                        self.update_grid(Location(r, c), EmptySpace(Location(r, c), self.cfg))
             return True
         return False

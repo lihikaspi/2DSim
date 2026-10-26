@@ -1,3 +1,5 @@
+from alerts.alert_manager import SimulationEvent
+from alerts.alert_type_enum import AlertType
 from config import Config
 from entities.entity import EmptySpace
 from entities.entity_type_enum import EntityType
@@ -43,6 +45,17 @@ class Predator(MobileEntity):
         if target_entity.type == EntityType.HERBIVORE:
             self.update_age(update_type="r")
             consumption = True
+
+            if hasattr(grid, "alert_manager") and grid.alert_manager:
+                grid.alert_manager.notify(
+                    SimulationEvent(
+                        event_type=AlertType.PREDATOR_ATE_HERBIVORE,
+                        data={
+                            "predator": self,
+                            "location": target_entity.loc.coords,
+                        },
+                    )
+                )
         else:
             self.update_age(update_type="u")
 

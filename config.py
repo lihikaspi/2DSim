@@ -13,6 +13,7 @@ class EntitiesConfig:
     plant_spawn_threshold: float
     moves: List[List[int]]
     never_dead: int
+    plant_population_threshold: float
 
 
 @dataclass
